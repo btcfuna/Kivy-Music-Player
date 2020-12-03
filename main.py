@@ -16,9 +16,10 @@ from kivy.lang import Builder
 from kivy.uix.scrollview import ScrollView
 from kivy.properties import ObjectProperty
 from kivy.core.window import Window
+from kivy.utils import platform
 #from kivymd.uix.spinner import MDSpinner
 ##############################
-Window.size = (360, 640)
+#Window.size = (360, 640)
 ##############################
 
 from helpers import *
@@ -28,12 +29,20 @@ import tqdm
 import os
 from mutagen.mp4 import MP4, MP4Cover
 
+if platform == 'android':
+    import android
+    from android.permissions import request_permissions, Permission
+    request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
+    from android.storage import primary_external_storage_path
+    dir = primary_external_storage_path()
+    download_dir_path = os.path.join(dir, 'Songs')
+    data_path = os.path.join(dir, 'Black Hole') + '/'
 
 class MyApp(MDApp):
     title = "Black Hole"
     lyr = False
     obj = ObjectProperty(None)
-    path = './Songs'
+    path = download_dir_path
     def build(self):
         self.theme_cls.theme_style = "Light"#Dark"
         self.theme_cls.bg_darkest
@@ -51,10 +60,11 @@ class MyApp(MDApp):
             pass
         else:
             os.mkdir(self.path)
-        if os.path.exists('./Black Hole'):
+        if os.path.exists(data_path):
             pass
         else:
-            os.mkdir('./Black Hole')
+            os.mkdir(data_path)
+
 
     def spin(self):
         temp = self.root.ids.spinner
@@ -87,19 +97,19 @@ class MyApp(MDApp):
             image_url = self.song_data[i]['image']#.replace('500x500', '150x150')
             response = requests.get(image_url)
             song_id = self.song_data[i]['id']
-            if os.path.exists('./Black Hole/'+song_id+'.jpg'):
+            if os.path.exists(data_path+song_id+'.jpg'):
                 print('already exists')
             else:
-                with open('./Black Hole/'+song_id+'.jpg', 'wb') as f:
+                with open(data_path+song_id+'.jpg', 'wb') as f:
                     f.write(response.content)
 
-            img = ImageLeftWidget(source='./Black Hole/'+song_id+'.jpg')
+            img = ImageLeftWidget(source=data_path+song_id+'.jpg')
             #print("{}. {} by {}".format(i+1, song_name, artist_name))
             
             lst = TwoLineAvatarListItem(text=song_name, secondary_text=artist_name, on_press=lambda x: self.song_details(0))
             lst.add_widget(img)
             list_view.add_widget(lst)
-            #os.remove('./Black Hole/'+song_id+'.jpg')
+            #os.remove(data_path+song_id+'.jpg')
 
     def song_details(self, i):
         self.s_manager = self.root.ids.screen_manager
@@ -119,9 +129,9 @@ class MyApp(MDApp):
         self.song_dwn_url = self.song_data[i]['media_url']
         #image_url = self.song_data[i]['image'].replace('500x500', '150x150')
         #response = requests.get(image_url)
-        # with open('./Black Hole/'+song_id+'.jpg', 'wb') as f:
+        # with open(data_path+song_id+'.jpg', 'wb') as f:
         #     f.write(response.content)
-        self.details_screen.add_widget(Image(source='./Black Hole/'+self.song_id+'.jpg', pos_hint={"center_x":0.5, "center_y":0.8}))
+        self.details_screen.add_widget(Image(source=data_path+self.song_id+'.jpg', pos_hint={"center_x":0.5, "center_y":0.8}))
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', font_style='H4', pos_hint={"top":0.95}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.9}))
         self.details_screen.add_widget(MDRoundFlatButton(text='Download', pos_hint={'center_x':0.5, "center_y":0.3}, on_press=lambda x: self.download_song()))
@@ -157,7 +167,7 @@ class MyApp(MDApp):
             audio['\xa9ART'] = self.artist_name
         audio['\xa9day'] = self.year
         audio['\xa9gen'] = self.genre
-        with open('./Black Hole/'+self.song_id+'.jpg', "rb") as f:
+        with open(data_path+self.song_id+'.jpg', "rb") as f:
             audio["covr"] = [
                 MP4Cover(f.read(), imageformat=MP4Cover.FORMAT_JPEG)
             ]
