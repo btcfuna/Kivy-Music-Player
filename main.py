@@ -32,11 +32,11 @@ from mutagen.mp4 import MP4, MP4Cover
 if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission
-    request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
-    from android.storage import primary_external_storage_path
+    request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+    from android.storage import primary_external_storage_path, app_storage_path
     dir = primary_external_storage_path()
     download_dir_path = os.path.join(dir, 'Songs')
-    data_path = os.path.join(dir, 'Black Hole') + '/'
+    data_path = app_storage_path()
 
 class MyApp(MDApp):
     title = "Black Hole"
@@ -97,19 +97,19 @@ class MyApp(MDApp):
             image_url = self.song_data[i]['image']#.replace('500x500', '150x150')
             response = requests.get(image_url)
             song_id = self.song_data[i]['id']
-            if os.path.exists(data_path+song_id+'.jpg'):
+            if os.path.exists(os.path.join(data_path,song_id+'.jpg')):
                 print('already exists')
             else:
-                with open(data_path+song_id+'.jpg', 'wb') as f:
+                with open(os.path.join(data_path,song_id+'.jpg'), 'wb') as f:
                     f.write(response.content)
 
-            img = ImageLeftWidget(source=data_path+song_id+'.jpg')
+            img = ImageLeftWidget(source=os.path.join(data_path,song_id+'.jpg'))
             #print("{}. {} by {}".format(i+1, song_name, artist_name))
             
             lst = TwoLineAvatarListItem(text=song_name, secondary_text=artist_name, on_press=lambda x: self.song_details(0))
             lst.add_widget(img)
             list_view.add_widget(lst)
-            #os.remove(data_path+song_id+'.jpg')
+            #os.remove(os.path.join(data_path,song_id+'.jpg'))
 
     def song_details(self, i):
         self.s_manager = self.root.ids.screen_manager
@@ -129,9 +129,9 @@ class MyApp(MDApp):
         self.song_dwn_url = self.song_data[i]['media_url']
         #image_url = self.song_data[i]['image'].replace('500x500', '150x150')
         #response = requests.get(image_url)
-        # with open(data_path+song_id+'.jpg', 'wb') as f:
+        # with open(os.path.join(data_path,song_id+'.jpg'), 'wb') as f:
         #     f.write(response.content)
-        self.details_screen.add_widget(Image(source=data_path+self.song_id+'.jpg', pos_hint={"center_x":0.5, "center_y":0.8}))
+        self.details_screen.add_widget(Image(source=os.path.join(data_path,self.song_id+'.jpg'), pos_hint={"center_x":0.5, "center_y":0.8}))
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', font_style='H4', pos_hint={"top":0.95}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.9}))
         self.details_screen.add_widget(MDRoundFlatButton(text='Download', pos_hint={'center_x':0.5, "center_y":0.3}, on_press=lambda x: self.download_song()))
@@ -142,7 +142,7 @@ class MyApp(MDApp):
         self.root.ids.screen_manager.current = 'SongListScreen'
     
     def download_song(self):
-        with requests.get(self.song_dwn_url, stream=True) as r, open("{}/{}.mp4".format(self.path, self.song_id), "wb") as f:
+        with requests.get(self.song_dwn_url, stream=True) as r, open("{}.mp4".format(os.path.join(self.path, self.song_id)), "wb") as f:
             file_size = int(r.headers['Content-Length'])
             for chunk in tqdm.tqdm(
             r.iter_content(chunk_size=1024),
@@ -152,11 +152,11 @@ class MyApp(MDApp):
             leave = True
             ):
                 f.write(chunk)
-        os.rename("{}/{}.mp4".format(self.path, self.song_id), "{}/{}.m4a".format(self.path, self.song_id))
+        os.rename("{}.mp4".format(os.path.join(self.path, self.song_id)), "{}.m4a".format(os.path.join(self.path, self.song_id)))
         self.save_metadata()
 
     def save_metadata(self):
-        audio_path = "{}/{}.m4a".format(self.path, self.song_id)
+        audio_path = "{}.m4a".format(os.path.join(self.path, self.song_id))
         audio = MP4(audio_path)
         audio['\xa9nam'] = self.song_name
         audio['\xa9alb'] = self.album
@@ -167,7 +167,7 @@ class MyApp(MDApp):
             audio['\xa9ART'] = self.artist_name
         audio['\xa9day'] = self.year
         audio['\xa9gen'] = self.genre
-        with open(data_path+self.song_id+'.jpg', "rb") as f:
+        with open(os.path.join(data_path, self.song_id+'.jpg'), "rb") as f:
             audio["covr"] = [
                 MP4Cover(f.read(), imageformat=MP4Cover.FORMAT_JPEG)
             ]
