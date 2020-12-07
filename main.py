@@ -25,11 +25,11 @@ from kivy.base import ExceptionManager, ExceptionHandler
 ##############################
 from concurrent.futures import ThreadPoolExecutor
 import threading
-from helpers import main
-import jiosaavn
 import requests
+import base64
 import json
 import os
+import time
 from pyDes import *
 from mutagen.mp4 import MP4, MP4Cover
 
@@ -61,13 +61,13 @@ class MyApp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Light"#Dark"
         self.theme_cls.bg_darkest
-        return Builder.load_string(main)
+        #return Builder.load_string(main)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Window.bind(on_keyboard=self.events)
-        self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = os.path.join(self.user_data_dir, 'cache')
+        self.path = './songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = './cache'#os.path.join(self.user_data_dir, 'cache')
         self.manager_open = False
         self.file_manager = MDFileManager(
             exit_manager=self.exit_manager,
@@ -81,66 +81,75 @@ class MyApp(MDApp):
             pass
         else:
             os.mkdir(self.data_path)
-        print('Init successful')
 
-
-    def spin(self):
-        temp = self.root.ids.spinner
-        temp.active = True
-        self.show_data()
 
     def show_data(self):
-        temp = self.root.ids.spinner
         close_btn = MDFlatButton(text="Close", on_release=self.close_dialog)
-        #more_btn = MDFlatButton(text="More")
-        #self.dia = MDDialog(title="Error", text=self.search_field.text, size_hint=(0.7,1), buttons=[close_btn])
         if self.root.ids.song_name.text == '':
             self.dia = MDDialog(title="Invalid Name", text="Please enter a song name", size_hint=(0.7,1), buttons=[close_btn])
             self.dia.open()
         
         else:
-            self.show_result()
-        temp.active = False
+            self.list_view = self.root.ids.container
+            self.list_view.clear_widgets()
+            self.img_lst = []
+            self.search_data = json.loads(requests.get(search_base_url+self.root.ids.song_name.text).text.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
+            #for i in range(len(self.search_data)):
+            #executor.submit(self.down_img)
+            #self.down_img()
+            t1 = threading.Thread(target=self.down_img)
+            t1.start()
+            t1.join()
+            executor = ThreadPoolExecutor(max_workers=10)
+            executor.submit(self.add_img)
+            #executor.shutdown()
 
-    def add_img(self, img_url, img_name):
-        response = requests.get(img_url)
-        if os.path.exists(img_name):
-            print('already exists')
-        else:
-            with open(img_name, 'wb') as f:
-                f.write(response.content)
+    def fetch_details(self):
+        print('started fetching details')
+        self.song_data = json.loads(requests.get(song_details_base_url+self.song_id).text.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))[self.song_id]
+        try:
+            url = self.song_data['media_preview_url']
+            url = url.replace("preview", "aac")
+            if self.song_data['320kbps']=="true":
+                url = url.replace("_96_p.mp4", "_320.mp4")
+            else:
+                url = url.replace("_96_p.mp4", "_160.mp4")
+            self.song_dwn_url = url
+        except KeyError or TypeError:
+            self.song_data['media_url'] = self.decrypt_url(self.song_data['encrypted_media_url'])
+            if self.song_data['320kbps']!="true":
+                self.song_dwn_url = self.song_data['media_url'].replace("_320.mp4","_160.mp4")
+
+        self.song_name = self.song_data['song']
+        self.album = self.song_data['album']
+        self.artist_name = self.song_data["primary_artists"]
+        self.featured_artist = self.song_data["featured_artists"]
+        self.year = self.song_data["year"]
+        self.genre = (self.song_data["language"]).capitalize()
+
+    def decrypt_url(url):
+        des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0",pad=None, padmode=PAD_PKCS5)
+        enc_url = base64.b64decode(url.strip())
+        dec_url = des_cipher.decrypt(enc_url, padmode=PAD_PKCS5).decode('utf-8')
+        dec_url = dec_url.replace("_96.mp4", "_320.mp4")
+        return dec_url
+
+    def add_img(self):
+        for img_url, img_name in self.img_lst:
+            if not os.path.exists(img_name):
+                response = requests.get(img_url)
+                with open(img_name, 'wb') as f:
+                    f.write(response.content)
 
     def down_img(self):
         for i in range(len(self.search_data)):
-            song_name = self.search_data[i]['title']
-            artist_name = self.search_data[i]['more_info']['primary_artists']
-            image_url = self.search_data[i]['image']#.replace('500x500', '150x150')
+            image_url = self.search_data[i]['image'].replace('50x50', '500x500')
             song_id = self.search_data[i]['id']
             image_name = os.path.join(self.data_path,song_id+'.jpg')
-
-            #print("{}. {} by {}".format(i+1, song_name, artist_name))
-            lst = TwoLineIconListItem(text=song_name, secondary_text=artist_name, on_press=lambda x: self.song_details(0))
+            lst = TwoLineAvatarListItem(text=self.search_data[i]['title'], secondary_text=self.search_data[i]['more_info']['primary_artists'], on_press=lambda x: self.song_details(0))
             lst.add_widget(IconLeftWidget(icon='music'))
             self.list_view.add_widget(lst)
             self.img_lst.append((image_url, image_name))
-
-    def show_result(self):
-        self.list_view = self.root.ids.container
-        self.list_view.clear_widgets()
-        self.img_lst = []
-        self.search_song(self.root.ids.song_name.text)
-        t1 = threading.Thread(target=self.down_img)
-        t1.start()
-        t1.join()
-        executor = ThreadPoolExecutor(max_workers=5)
-        for (a,b) in self.img_lst:
-            executor.submit(self.add_img, a, b)
-        self.song_data = (executor.submit(jiosaavn.get_details, self.search_data)).result()
-#        for i in range(len(self.song_data)):
-#            executor.submit(self.down_img, i)
-        #executor.shutdown()
-            
-            #os.remove(os.path.join(self.data_path,song_id+'.jpg'))
 
     def song_details(self, i):
         self.s_manager = self.root.ids.screen_manager
@@ -148,16 +157,9 @@ class MyApp(MDApp):
         self.s_manager.current = 'SongDetailsScreen'
         self.details_screen = self.root.ids.SongDetailsScreen
         self.details_screen.clear_widgets()
-        self.song_name = self.song_data[i]['title']
-        self.artist_name = self.song_data[i]['primary_artists']
-        self.featured_artist = self.song_data[i]['featured_artists']
-        self.album = self.song_data[i]['album']
-        self.year = self.song_data[i]['year']
-        self.genre = (self.song_data[i]['language'])
-        self.genre = self.genre[0].upper() + self.genre[1:]
-
-        self.song_id = self.song_data[i]['id']
-        self.song_dwn_url = self.song_data[i]['media_url']
+        self.song_name = self.search_data[i]['title']
+        self.song_id = self.search_data[i]['id']
+        self.artist_name = self.search_data[i]['more_info']['primary_artists']
         self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
         #image_url = self.song_data[i]['image'].replace('500x500', '150x150')
         #response = requests.get(image_url)
@@ -174,13 +176,19 @@ class MyApp(MDApp):
         self.root.ids.screen_manager.current = screen
     
     def download_song(self):
-        with open("{}.m4a".format(os.path.join(self.path, self.song_id)), "wb") as f:
+        self.fetch_details()
+        #t2 = threading.Thread(target=self.fetch_details)
+        #t2.start()
+        #t2.join()
+        print('started downloading song')
+        fname = "{}/{} - {}.m4a".format(self.path, self.song_name, self.artist_name)
+        with open(fname, "wb") as f:
             response = requests.get(self.song_dwn_url)
             f.write(response.content)
         self.save_metadata()
 
     def save_metadata(self):
-        audio_path = "{}.m4a".format(os.path.join(self.path, self.song_id))
+        audio_path = os.path.join(self.path, "{} - {}.m4a".format(self.song_name, self.artist_name))
         audio = MP4(audio_path)
         audio['\xa9nam'] = self.song_name
         audio['\xa9alb'] = self.album
@@ -196,8 +204,6 @@ class MyApp(MDApp):
                 MP4Cover(f.read(), imageformat=MP4Cover.FORMAT_JPEG)
             ]
         audio.save()
-        fname = "{}/{} - {}.m4a".format(self.path, self.artist_name, self.song_name)
-        os.rename("{}/{}.m4a".format(self.path, self.song_id), "{}".format(fname))
         close_btn = MDFlatButton(text="OK", on_release=self.close_dialog)
         self.dia = MDDialog(title="Download Complete", text="Song Downloaded Successfully!", size_hint=(0.7,1), buttons=[close_btn])
         self.dia.open()
@@ -213,8 +219,6 @@ class MyApp(MDApp):
         self.path = path
 
     def exit_manager(self, *args):
-        '''Called when the user reaches the root of the directory tree.'''
-
         self.manager_open = False
         self.file_manager.close()
 
@@ -237,10 +241,6 @@ class MyApp(MDApp):
 
     def close_dialog(self, obj):
         self.dia.dismiss()
-
-    def search_song(self, song_name):
-        response = json.loads(requests.get(search_base_url+song_name).text.encode().decode('unicode-escape'))
-        self.search_data = response['songs']['data']
 
 if __name__ == '__main__':
     MyApp().run()
