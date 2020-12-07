@@ -168,12 +168,17 @@ class MyApp(MDApp):
         self.details_screen.add_widget(Image(source=self.image_path, pos_hint={"center_x":0.5, "center_y":0.8}))
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', font_style='H4', pos_hint={"top":0.95}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.9}))
-        self.details_screen.add_widget(MDRoundFlatButton(text='Play', pos_hint={'center_x':0.5, "center_y":0.3}, on_press=lambda x: self.change_screen('SongListScreen')))
+        self.details_screen.add_widget(MDRoundFlatButton(text='Play', pos_hint={'center_x':0.5, "center_y":0.3}, on_press=lambda x: self.play_song()))
         self.details_screen.add_widget(MDRoundFlatButton(text='Download', pos_hint={'center_x':0.5, "center_y":0.2}, on_press=lambda x: self.download_song()))
         
     def change_screen(self, screen):
         self.root.ids.screen_manager.transition.direction = 'right'
         self.root.ids.screen_manager.current = screen
+    
+    def play_song(self):
+        close_btn = MDFlatButton(text="Close", on_release=self.close_dialog)
+        self.dia = MDDialog(text="Feature under development!", size_hint=(0.7,1), buttons=[close_btn])
+        self.dia.open()
     
     def download_song(self):
         self.fetch_details()
