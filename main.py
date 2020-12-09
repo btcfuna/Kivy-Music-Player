@@ -97,9 +97,11 @@ class MyApp(MDApp):
             #for i in range(len(self.search_data)):
             #executor.submit(self.down_img)
             #self.down_img()
-            t1 = threading.Thread(target=self.down_img)
-            t1.start()
-            t1.join()
+            for i in range(len(self.search_data)):
+                self.down_img(i)
+            #t1 = threading.Thread(target=self.down_img(i))
+            #t1.start()
+            #t1.join()
             executor = ThreadPoolExecutor(max_workers=10)
             executor.submit(self.add_img)
             #executor.shutdown()
@@ -141,15 +143,14 @@ class MyApp(MDApp):
                 with open(img_name, 'wb') as f:
                     f.write(response.content)
 
-    def down_img(self):
-        for i in range(len(self.search_data)):
-            image_url = self.search_data[i]['image'].replace('50x50', '500x500')
-            song_id = self.search_data[i]['id']
-            image_name = os.path.join(self.data_path,song_id+'.jpg')
-            lst = TwoLineAvatarListItem(text=self.search_data[i]['title'], secondary_text=self.search_data[i]['more_info']['primary_artists'], on_press=lambda x: self.song_details(0))
-            lst.add_widget(IconLeftWidget(icon='music'))
-            self.list_view.add_widget(lst)
-            self.img_lst.append((image_url, image_name))
+    def down_img(self, i):
+        image_url = self.search_data[i]['image'].replace('50x50', '500x500')
+        song_id = self.search_data[i]['id']
+        image_name = os.path.join(self.data_path,song_id+'.jpg')
+        lst = TwoLineAvatarListItem(text=self.search_data[i]['title'], secondary_text=self.search_data[i]['more_info']['primary_artists'], on_press=lambda x: self.song_details(i))
+        lst.add_widget(IconLeftWidget(icon='music'))
+        self.list_view.add_widget(lst)
+        self.img_lst.append((image_url, image_name))
 
     def song_details(self, i):
         self.s_manager = self.root.ids.screen_manager
@@ -186,13 +187,16 @@ class MyApp(MDApp):
         #t2.start()
         #t2.join()
         print('started downloading song')
+        print(self.song_dwn_url)
         fname = "{}/{} - {}.m4a".format(self.path, self.song_name, self.artist_name)
         with open(fname, "wb") as f:
             response = requests.get(self.song_dwn_url)
             f.write(response.content)
+        print('finished downloading song')
         self.save_metadata()
 
     def save_metadata(self):
+        print('getting metadata')
         audio_path = os.path.join(self.path, "{} - {}.m4a".format(self.song_name, self.artist_name))
         audio = MP4(audio_path)
         audio['\xa9nam'] = self.song_name
@@ -209,6 +213,7 @@ class MyApp(MDApp):
                 MP4Cover(f.read(), imageformat=MP4Cover.FORMAT_JPEG)
             ]
         audio.save()
+        print('finished getting metadata')
         close_btn = MDFlatButton(text="OK", on_release=self.close_dialog)
         self.dia = MDDialog(title="Download Complete", text="Song Downloaded Successfully!", size_hint=(0.7,1), buttons=[close_btn])
         self.dia.open()
