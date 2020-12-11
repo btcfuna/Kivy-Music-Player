@@ -55,11 +55,8 @@ NavigationLayout:
                 text: 'Search'
                 pos_hint: {'center_x':0.5, 'y':0.5}
                 on_press:
-                    screen_manager.transition.direction = 'left'
-                    screen_manager.current = 'SongListScreen'
                     app.show_data()
                     
-
             MDSpinner:
                 id: spinner
                 padding: 10
@@ -77,6 +74,7 @@ NavigationLayout:
                 MDToolbar:
                     title: 'Results'
                     elevation: 10
+                    left_action_items: [['chevron-left', lambda x: app.change_screen('MainScreen', 'right')]]
 
                 ScrollView:
                     size_hint: (1, 2.5)
@@ -105,6 +103,7 @@ NavigationLayout:
                 MDToolbar:
                     elevation: 10
                     title: 'About'
+                    left_action_items: [['chevron-left', lambda x: app.change_screen('MainScreen', 'right')]]
 
                 Image:
                     source: './made.png'
@@ -113,8 +112,7 @@ NavigationLayout:
                     text: 'Contact us'
                     pos_hint: {'center_x':0.5}
                     on_press:
-                        screen_manager.transition.direction = 'right'
-                        screen_manager.current = 'MainScreen'
+                        app.change_screen('MainScreen', 'right')
 
     MDNavigationDrawer:
         id: nav_drawer
@@ -132,14 +130,12 @@ NavigationLayout:
                         pos_hint: {'center_x': 0.5, 'center_y': 0.5}
                         on_release:
                             nav_drawer.toggle_nav_drawer()
-                            screen_manager.transition.direction = 'right'
-                            screen_manager.current = 'MainScreen'
+                            app.change_screen('MainScreen', 'right')
                         IconLeftWidget:
                             icon: 'home'
                             on_release:
                                 nav_drawer.toggle_nav_drawer()
-                                screen_manager.transition.direction = 'right'
-                                screen_manager.current = 'MainScreen'
+                                app.change_screen('MainScreen', 'right')
                         
                         
                     OneLineIconListItem:
@@ -154,11 +150,9 @@ NavigationLayout:
                         text: 'About'
                         on_release:
                             nav_drawer.toggle_nav_drawer()
-                            screen_manager.transition.direction = 'left'
-                            screen_manager.current = 'AboutScreen'
+                            app.change_screen('AboutScreen', 'left')
                         IconLeftWidget:
                             icon: 'help-rhombus'
                             on_release:
                                 nav_drawer.toggle_nav_drawer()
-                                screen_manager.transition.direction = 'left'
-                                screen_manager.current = 'AboutScreen'
+                                app.change_screen('AboutScreen', 'left')
