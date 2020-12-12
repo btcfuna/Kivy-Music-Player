@@ -43,12 +43,6 @@ if platform == 'android':
     request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
 
 
-
-#class CrashHandler(ExceptionHandler):
-#    def handle_exception(self, inst):
-#        print(inst)
-#        return ExceptionManager.PASS
-#ExceptionManager.add_handler(CrashHandler())
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
 
@@ -60,7 +54,7 @@ class MyApp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Light"#Dark"
         self.theme_cls.bg_darkest
-        #Loader.loading_image = 'temp.jpg'#'giphy.gif'
+        Loader.loading_image = 'blank.jpg'#'giphy.gif'
         #return Builder.load_string(main)
 
     def __init__(self, **kwargs):
@@ -84,12 +78,6 @@ class MyApp(MDApp):
             os.mkdir(self.data_path)
 
 
-    def spin(self):
-        #print('pass')
-        self.root.ids.spinner.active = True
-        #Clock.schedule_once(self.show_data)
-        #self.show_data()
-
     def show_data(self, *args):
         close_btn = MDFlatButton(text="Close", on_release=self.close_dialog)
         if self.root.ids.song_name.text == '':
@@ -97,26 +85,24 @@ class MyApp(MDApp):
             self.dia.open()
         
         else:
-            #self.schedule_fun = Clock.schedule_once(self.spin)
-            #Clock.schedule_once(self.stop_spin, 5)
-#            self.spin()
-            self.change_screen('SongListScreen', 'left')
-            self.list_view = self.root.ids.container
-            self.list_view.clear_widgets()
-            #self.img_lst = []
-            self.search_data = json.loads(requests.get(search_base_url+self.root.ids.song_name.text).text.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
-            #for i in range(len(self.search_data)):
-            #executor.submit(self.down_img)
-            #self.down_img()
-            for i in range(len(self.search_data)):
-                self.down_img(i)
-            #t1 = threading.Thread(target=self.down_img(i))
-            #t1.start()
-            #t1.join()
-            #self.root.ids.spinner.active = False
-            #executor = ThreadPoolExecutor(max_workers=10)
-            #executor.submit(self.add_img)
-            #executor.shutdown()
+            self.dia = MDDialog(text="Searching for songs ...", size_hint=(0.7,1))
+            t1 = threading.Thread(target=self.show_list)
+            t1.start()
+
+    def show_list(self):
+        self.dia.open()
+        self.change_screen('SongListScreen', 'left')
+        self.list_view = self.root.ids.container
+        self.list_view.clear_widgets()
+        self.search_data = json.loads(requests.get(search_base_url+self.root.ids.song_name.text).text.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
+        for i in range(len(self.search_data)):
+            self.down_img(i)
+        self.dia.dismiss()
+
+    def down_img(self, i):
+        lst = TwoLineAvatarListItem(text=self.search_data[i]['title'], secondary_text=self.search_data[i]['more_info']['primary_artists'], on_press=lambda x: self.song_details(i))
+        lst.add_widget(IconLeftWidget(icon='music'))
+        self.list_view.add_widget(lst)
 
     def fetch_details(self):
         print('started fetching details')
@@ -148,15 +134,6 @@ class MyApp(MDApp):
         dec_url = dec_url.replace("_96.mp4", "_320.mp4")
         return dec_url
 
-    def down_img(self, i):
-        #image_url = self.search_data[i]['image'].replace('50x50', '500x500')
-        #song_id = self.search_data[i]['id']
-        #image_name = os.path.join(self.data_path,song_id+'.jpg')
-        lst = TwoLineAvatarListItem(text=self.search_data[i]['title'], secondary_text=self.search_data[i]['more_info']['primary_artists'], on_press=lambda x: self.song_details(i))
-        lst.add_widget(IconLeftWidget(icon='music'))
-        self.list_view.add_widget(lst)
-        #self.img_lst.append((image_url, image_name))
-
     def song_details(self, i):
         self.s_manager = self.root.ids.screen_manager
         self.s_manager.transition.direction = 'left'
@@ -166,24 +143,29 @@ class MyApp(MDApp):
         self.song_name = self.search_data[i]['title']
         self.song_id = self.search_data[i]['id']
         self.artist_name = self.search_data[i]['more_info']['primary_artists']
+        self.album = self.search_data[i]['album']
         self.image_url = self.search_data[i]['image'].replace('50x50', '500x500')
         self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
 
         self.details_screen.add_widget(AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}))
-        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', font_style='H4', pos_hint={"top":0.95}))
-        self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.9}))
+        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', font_style='H4', pos_hint={"top":1}))
+        self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.95}))
+        self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.9}))
         self.details_screen.add_widget(MDRoundFlatButton(text='Play', pos_hint={'center_x':0.5, "center_y":0.3}, on_press=lambda x: self.play_song()))
-        self.details_screen.add_widget(MDRoundFlatButton(text='Download', pos_hint={'center_x':0.5, "center_y":0.2}, on_press=lambda x: self.download_song()))
+        self.details_screen.add_widget(MDRoundFlatButton(text='Download', pos_hint={'center_x':0.5, "center_y":0.2}, on_press=lambda x: self.download_bar()))
         
     def change_screen(self, screen, direction):
         self.root.ids.screen_manager.transition.direction = direction
         self.root.ids.screen_manager.current = screen
     
     def download_bar(self):
-        self.progress_val = 0
-#        self.dia = MDDialog(text="Downloading ...", size_hint=(0.7,1))
-#        self.dia.add_widget(MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.5, value = self.progress_val))
-#        self.dia.open()
+        self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.5, value = 0)
+        self.dia = MDDialog(title='Downloading')
+        #self.dia.add_widget(IconLeftWidget(icon='download', pos_hint={'center_x': .1, 'center_y': .1}))
+        self.dia.add_widget(self.progress)
+        self.dia.open()
+        t2 = threading.Thread(target=self.download_song)
+        t2.start()
 
     def play_song(self):
         close_btn = MDFlatButton(text="Close", on_release=self.close_dialog)
@@ -192,19 +174,16 @@ class MyApp(MDApp):
     
     def download_song(self):
         self.fetch_details()
-        #t2 = threading.Thread(target=self.fetch_details)
-        #t2.start()
-        #t2.join()
         print('started downloading song')
-        #print(self.song_dwn_url)
         fname = "{}/{} - {}.m4a".format(self.data_path, self.song_name, self.artist_name)
-        self.download_bar()
+        #self.download_bar()
         with requests.get(self.song_dwn_url, stream=True) as r, open(fname, "wb") as f:
             file_size = int(r.headers['Content-Length'])
             total= int(file_size / 1024)
             for chunk in r.iter_content(chunk_size=1024):
                 f.write(chunk)
-                self.progress_val += 100/total
+                self.progress.value += 100/total
+                
         print('finished downloading song')
         with open(self.image_path, 'wb') as f:
             f.write(requests.get(self.image_url).content)
@@ -231,6 +210,8 @@ class MyApp(MDApp):
         shutil.move(audio_path, audio_path.replace(self.data_path, self.path))
         print('finished getting metadata')
         #close_btn = MDFlatButton(text="OK", on_release=self.close_dialog)
+        self.dia.dismiss()
+        os.remove(os.path.join(self.data_path, self.song_id+'.jpg'))
         close_btn = MDIconButton(icon='checkbox-marked-circle-outline', on_release=self.close_dialog)
         self.dia = MDDialog(title="Download Complete", text="Song Downloaded Successfully!", size_hint=(0.7,1), buttons=[close_btn])
         self.dia.open()
