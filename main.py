@@ -37,10 +37,10 @@ from pyDes import *
 from mutagen.mp4 import MP4, MP4Cover
 
 
-
-#    import android
-#    from android.permissions import request_permissions, Permission
-#    request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+if platform == 'android':
+    import android
+    from android.permissions import request_permissions, Permission
+    request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
 
 
 
@@ -99,7 +99,7 @@ class MyApp(MDApp):
         else:
             #self.schedule_fun = Clock.schedule_once(self.spin)
             #Clock.schedule_once(self.stop_spin, 5)
-            self.spin()
+#            self.spin()
             self.change_screen('SongListScreen', 'left')
             self.list_view = self.root.ids.container
             self.list_view.clear_widgets()
@@ -167,7 +167,7 @@ class MyApp(MDApp):
         self.song_id = self.search_data[i]['id']
         self.artist_name = self.search_data[i]['more_info']['primary_artists']
         self.image_url = self.search_data[i]['image'].replace('50x50', '500x500')
-        #self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
+        self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
 
         self.details_screen.add_widget(AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}))
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', font_style='H4', pos_hint={"top":0.95}))
@@ -181,9 +181,9 @@ class MyApp(MDApp):
     
     def download_bar(self):
         self.progress_val = 0
-        self.dia = MDDialog(text="Downloading ...", size_hint=(0.7,1))
-        self.dia.add_widget(MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.5, value = self.progress_val))
-        self.dia.open()
+#        self.dia = MDDialog(text="Downloading ...", size_hint=(0.7,1))
+#        self.dia.add_widget(MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.5, value = self.progress_val))
+#        self.dia.open()
 
     def play_song(self):
         close_btn = MDFlatButton(text="Close", on_release=self.close_dialog)
@@ -206,6 +206,8 @@ class MyApp(MDApp):
                 f.write(chunk)
                 self.progress_val += 100/total
         print('finished downloading song')
+        with open(self.image_path, 'wb') as f:
+            f.write(requests.get(self.image_url).content)
         self.save_metadata()
 
     def save_metadata(self):
