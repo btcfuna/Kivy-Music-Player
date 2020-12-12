@@ -24,8 +24,6 @@ from kivy.app import App
 from kivy.base import ExceptionManager, ExceptionHandler
 #from kivymd.uix.spinner import MDSpinner
 ##############################
-#Window.size = (360, 640)
-##############################
 from concurrent.futures import ThreadPoolExecutor
 import threading
 import requests
@@ -33,6 +31,7 @@ import base64
 import json
 import os
 import shutil
+import time
 from pyDes import *
 from mutagen.mp4 import MP4, MP4Cover
 
@@ -48,7 +47,7 @@ song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails
 
 class MyApp(MDApp):
     title = "Black Hole"
-    lyr = False
+    status = True
 #    obj = ObjectProperty(None)
 #    path = download_dir_path
     def build(self):
@@ -158,11 +157,24 @@ class MyApp(MDApp):
         self.root.ids.screen_manager.transition.direction = direction
         self.root.ids.screen_manager.current = screen
     
+    def cancel(self):
+        self.progress.color = 1, 0, 0, 1
+        self.status = False
+        time.sleep(1)
+        try:
+            os.remove("{}/{} - {}.m4a".format(self.data_path, self.song_name, self.artist_name))
+            print('removed')
+        except:
+            print('failed to remove')
+            pass
+        self.dia.dismiss()
+
     def download_bar(self):
-        self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.5, value = 0)
-        self.dia = MDDialog(title='Downloading')
+        self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.5, value = 0, color = self.theme_cls.primary_color)
+        self.dia = MDDialog(title='Downloading', buttons=[MDFlatButton(text="CANCEL", text_color=self.theme_cls.primary_color, on_press=lambda x: self.cancel())])
         #self.dia.add_widget(IconLeftWidget(icon='download', pos_hint={'center_x': .1, 'center_y': .1}))
         self.dia.add_widget(self.progress)
+        #self.dia.add_widget(IconLeftWidget(icon='download', pos_hint={'center_x':0.2, 'center_y':0.5}))
         self.dia.open()
         t2 = threading.Thread(target=self.download_song)
         t2.start()
@@ -173,23 +185,29 @@ class MyApp(MDApp):
         self.dia.open()
     
     def download_song(self):
-        self.fetch_details()
-        print('started downloading song')
-        fname = "{}/{} - {}.m4a".format(self.data_path, self.song_name, self.artist_name)
-        #self.download_bar()
-        with requests.get(self.song_dwn_url, stream=True) as r, open(fname, "wb") as f:
-            file_size = int(r.headers['Content-Length'])
-            total= int(file_size / 1024)
-            for chunk in r.iter_content(chunk_size=1024):
-                f.write(chunk)
-                self.progress.value += 100/total
-                
-        print('finished downloading song')
-        with open(self.image_path, 'wb') as f:
-            f.write(requests.get(self.image_url).content)
-        self.save_metadata()
+        if self.status:
+            self.fetch_details()
+        if self.status:
+            print('started downloading song')
+            fname = "{}/{} - {}.m4a".format(self.data_path, self.song_name, self.artist_name)
+            #self.download_bar()
+            with requests.get(self.song_dwn_url, stream=True) as r, open(fname, "wb") as f:
+                file_size = int(r.headers['Content-Length'])
+                total= int(file_size / 1024)
+                for chunk in r.iter_content(chunk_size=1024):
+                    if self.status:
+                        f.write(chunk)
+                        self.progress.value += 100/total
+                    else:
+                        print('Download cancelled')
+                        break
+            print('finished downloading song')
+        if self.status:
+            self.save_metadata()
 
     def save_metadata(self):
+        with open(self.image_path, 'wb') as f:
+            f.write(requests.get(self.image_url).content)
         print('getting metadata')
         audio_path = os.path.join(self.data_path, "{} - {}.m4a".format(self.song_name, self.artist_name))
         audio = MP4(audio_path)
