@@ -20,6 +20,7 @@ from kivy.core.window import Window
 from kivy.utils import platform
 from kivy.clock import Clock
 from kivy.loader import Loader
+from kivy.core.audio import SoundLoader
 from kivy.app import App
 from kivy.base import ExceptionManager, ExceptionHandler
 #from kivymd.uix.spinner import MDSpinner
@@ -59,8 +60,8 @@ class MyApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Window.bind(on_keyboard=self.events)
-        self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = os.path.join(self.user_data_dir, 'cache')
+        self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
         self.manager_open = False
         self.file_manager = MDFileManager(
             exit_manager=self.exit_manager,
@@ -160,7 +161,11 @@ class MyApp(MDApp):
     def cancel(self):
         self.progress.color = 1, 0, 0, 1
         self.status = False
-        time.sleep(1)
+        t3=threading.Thread(target=self.cancel2)
+        t3.start()
+    
+    def cancel2(self):
+        time.sleep(0.5)
         try:
             os.remove("{}/{} - {}.m4a".format(self.data_path, self.song_name, self.artist_name))
             print('removed')
@@ -168,6 +173,7 @@ class MyApp(MDApp):
             print('failed to remove')
             pass
         self.dia.dismiss()
+        self.status=True
 
     def download_bar(self):
         self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.5, value = 0, color = self.theme_cls.primary_color)
@@ -180,9 +186,42 @@ class MyApp(MDApp):
         t2.start()
 
     def play_song(self):
-        close_btn = MDFlatButton(text="Close", on_release=self.close_dialog)
+        self.fetch_details()
+        self.sound = SoundLoader.load('./Khaab.mp3')
+        close_btn = MDFlatButton(text="Close", on_release=lambda x: self.stop_song())
         self.dia = MDDialog(text="Feature under development!", size_hint=(0.7,1), buttons=[close_btn])
+        self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.5, value = 0, color = self.theme_cls.primary_color)
+        self.dia.add_widget(self.progress)
         self.dia.open()
+        #self.fetch_details()
+        #print(self.song_dwn_url)
+
+        if self.sound:
+            print("Sound found at %s" % self.sound.source)
+            print("Sound is %.3f seconds" % self.sound.length)
+            self.sound.play()
+        lnth = self.sound.length
+        t2 = threading.Thread(target=self.play_bar, args=(lnth,))
+        t2.start()
+    
+    def stop_song(self):
+        self.sound.stop()
+        self.dia.dismiss()
+
+    def play_bar(self, length):
+        for _ in range(int(length)):
+            time.sleep(1)
+            self.progress.value = 100*(self.sound.get_pos())/length
+            #print(self.progress.value)
+            if self.progress.value == 0:
+                print('breaked loop')
+                break
+            #print(self.progress.value)
+        self.dia.dismiss()
+        
+        # if not self.play_status:
+        #     music.stop()
+            
     
     def download_song(self):
         if self.status:
@@ -199,7 +238,7 @@ class MyApp(MDApp):
                         f.write(chunk)
                         self.progress.value += 100/total
                     else:
-                        print('Download cancelled')
+                        #print('Download cancelled')
                         break
             print('finished downloading song')
         if self.status:
