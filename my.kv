@@ -90,7 +90,21 @@ NavigationLayout:
                 id: detailsbox
                 orientation: 'vertical'
 
-        
+        Screen:
+            id: DownloadsScreen
+            name: 'DownloadsScreen'
+            BoxLayout:
+                orientation: 'vertical'
+                MDToolbar:
+                    title: 'Downloads'
+                    elevation: 10
+                    left_action_items: [['chevron-left', lambda x: app.change_screen('MainScreen', 'right')]]
+
+                ScrollView:
+                    size_hint: (1, 2.5)
+                    MDList:
+                        id: downloadlist
+
         Screen:
             id: AboutScreen
             name: 'AboutScreen'
@@ -141,8 +155,9 @@ NavigationLayout:
                     OneLineIconListItem:
                         text: 'Downloads'
                         on_release:
+                            app.download_list()
                             nav_drawer.toggle_nav_drawer()
-                            print('pressed downloads')
+                            app.change_screen('DownloadsScreen', 'left')
                         IconLeftWidget:
                             icon: 'folder-download'
                     

@@ -9,7 +9,7 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFlatButton, MDRectangleFlatIconButton, MDRoundFlatButton
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.progressbar import MDProgressBar
-from kivymd.uix.list import ImageLeftWidget, TwoLineIconListItem, MDList, IconLeftWidget, TwoLineAvatarListItem
+from kivymd.uix.list import ImageLeftWidget, TwoLineIconListItem, MDList, IconLeftWidget, TwoLineAvatarListItem, OneLineAvatarListItem
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.toast import toast
 from kivy.uix.boxlayout import BoxLayout
@@ -36,7 +36,6 @@ import time
 from pyDes import *
 from mutagen.mp4 import MP4, MP4Cover
 
-
 if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission
@@ -54,7 +53,7 @@ class MyApp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Light"#Dark"
         self.theme_cls.bg_darkest
-        Loader.loading_image = 'blank.jpg'#'giphy.gif'
+        #Loader.loading_image = 'blank.jpg'#'giphy.gif'
         #return Builder.load_string(main)
 
     def __init__(self, **kwargs):
@@ -77,6 +76,17 @@ class MyApp(MDApp):
         else:
             os.mkdir(self.data_path)
 
+
+    def download_list(self):
+        self.down_list = self.root.ids.downloadlist
+        self.down_list.clear_widgets()
+        for items in os.listdir(self.path):
+            self.add_down_song(items)
+    
+    def add_down_song(self, item):
+        lst = OneLineAvatarListItem(text=item.strip('.m4a'), on_press=lambda x: self.play_song(os.path.join(self.path, item)))
+        lst.add_widget(IconLeftWidget(icon='music'))
+        self.down_list.add_widget(lst)
 
     def show_data(self, *args):
         close_btn = MDFlatButton(text="Close", on_release=self.close_dialog)
@@ -126,6 +136,7 @@ class MyApp(MDApp):
         self.featured_artist = self.song_data["featured_artists"]
         self.year = self.song_data["year"]
         self.genre = (self.song_data["language"]).capitalize()
+        print('finished fetching details')
 
     def decrypt_url(url):
         des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0",pad=None, padmode=PAD_PKCS5)
@@ -146,13 +157,16 @@ class MyApp(MDApp):
         self.album = self.search_data[i]['album']
         self.image_url = self.search_data[i]['image'].replace('50x50', '500x500')
         self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
+        t1 = threading.Thread(target=self.fetch_details)
+        t1.start()
 
         self.details_screen.add_widget(AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}))
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', font_style='H4', pos_hint={"top":1}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.95}))
         self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.9}))
-        self.details_screen.add_widget(MDRoundFlatButton(text='Play', pos_hint={'center_x':0.5, "center_y":0.3}, on_press=lambda x: self.play_song()))
+        self.details_screen.add_widget(MDRoundFlatButton(text='Play', pos_hint={'center_x':0.5, "center_y":0.3}, on_press=lambda x: self.play_song(os.path.join(self.song_dwn_url))))
         self.details_screen.add_widget(MDRoundFlatButton(text='Download', pos_hint={'center_x':0.5, "center_y":0.2}, on_press=lambda x: self.download_bar()))
+        
         
     def change_screen(self, screen, direction):
         self.root.ids.screen_manager.transition.direction = direction
@@ -185,9 +199,9 @@ class MyApp(MDApp):
         t2 = threading.Thread(target=self.download_song)
         t2.start()
 
-    def play_song(self):
-        self.fetch_details()
-        self.sound = SoundLoader.load('./Khaab.mp3')
+    def play_song(self, link):
+        #self.fetch_details()
+        self.sound = SoundLoader.load(link)
         close_btn = MDFlatButton(text="Close", on_release=lambda x: self.stop_song())
         self.dia = MDDialog(text="Feature under development!", size_hint=(0.7,1), buttons=[close_btn])
         self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.5, value = 0, color = self.theme_cls.primary_color)
@@ -224,8 +238,8 @@ class MyApp(MDApp):
             
     
     def download_song(self):
-        if self.status:
-            self.fetch_details()
+        #if self.status:
+        #    self.fetch_details()
         if self.status:
             print('started downloading song')
             fname = "{}/{} - {}.m4a".format(self.data_path, self.song_name, self.artist_name)
@@ -280,8 +294,11 @@ class MyApp(MDApp):
 
     def select_path(self, path):
         self.exit_manager()
-        toast("Songs will be downloaded to: "+path)
-        self.path = path
+        if os.path.isdir(path):
+            self.path = path
+            toast("Songs will be downloaded to: "+path)
+        else:
+            toast("No directory selected")
 
     def exit_manager(self, *args):
         self.manager_open = False
