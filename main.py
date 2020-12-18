@@ -52,12 +52,11 @@ class MyApp(MDApp):
 #    obj = ObjectProperty(None)
 #    path = download_dir_path
     def build(self):
-        #with open('data.json', "r") as f:
-        #    self.data = json.loads(f.read())
         #self.theme_cls = ThemeManager()
-        #self.theme_cls.primary_palette = self.data['color']
-        self.theme_cls.theme_style = "Dark"#self.data['theme']
-        #self.theme_cls.primary_hue = self.data['hue']
+        self.theme_cls.primary_palette = "Blue"
+        self.theme_cls.theme_style = "Light"
+        #self.theme_cls.primary_hue = 
+        self.theme_cls.accent_palette = 'Blue'
         #self.theme_cls.bg_darkest
         #Loader.loading_image = 'blank.jpg'#'giphy.gif'
         #return Builder.load_string(main)
@@ -82,9 +81,6 @@ class MyApp(MDApp):
         else:
             os.mkdir(self.data_path)
 
-    def show_theme_picker(self):
-        self.pick = MDThemePicker()
-        self.pick.open()
 
     def download_list(self):
         self.down_list = self.root.ids.downloadlist

@@ -138,13 +138,6 @@ NavigationLayout:
                     elevation: 10
                     title: 'Settings'
                     left_action_items: [['chevron-left', lambda x: app.change_screen('MainScreen', 'right')]]
-                
-                MDRoundFlatButton:
-                    text: 'Theme'
-                    pos_hint: {'center_x':0.5, 'center_y':0.5}
-                    text_color: app.theme_cls.primary_color
-                    on_press:
-                        app.show_theme_picker()
 
                 MDRoundFlatButton:
                     text: 'Save'
