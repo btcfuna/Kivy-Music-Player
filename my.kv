@@ -4,15 +4,10 @@
     MDToolbar:
         title: app.title
 
-<Box@BoxLayout>:
-    bg: 0, 0, 0, 0
-
-    canvas:
-        Color:
-            rgba: root.bg
-        Rectangle:
-            pos: self.pos
-            size: self.size
+<Check@MDCheckbox>:
+    group: 'group'
+    size_hint: None, None
+    size: dp(48), dp(48)
 
 NavigationLayout:
     ScreenManager:
@@ -37,13 +32,13 @@ NavigationLayout:
                         mode: 'end'
                         type: 'bottom'
                         icon: "folder"
-                        icon_color: app.theme_cls.primary_color
+                        text_color: app.theme_cls.primary_color
                         on_action_button: app.file_manager_open()
                 Widget:
             
             MDTextField:
                 id: song_name
-                hint_text: "Song name"
+                hint_text: "Search"
                 helper_text: "Enter song name here"
                 helper_text_mode: "on_focus"
                 icon_right: "music-note"
@@ -52,8 +47,9 @@ NavigationLayout:
                 size_hint:(0.5,0.08)
             
             MDRoundFlatButton:
-                text: 'Search'
+                text: 'SEARCH'
                 pos_hint: {'center_x':0.5, 'y':0.5}
+                text_color: app.theme_cls.primary_color
                 on_press:
                     app.show_data()
                     
@@ -125,8 +121,39 @@ NavigationLayout:
                 MDRoundFlatButton:
                     text: 'Contact us'
                     pos_hint: {'center_x':0.5}
+                    text_color: app.theme_cls.primary_color
                     on_press:
                         app.change_screen('MainScreen', 'right')
+
+        Screen:
+            id: SettingsScreen
+            name: 'SettingsScreen'
+            
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: 1, 0.5
+                pos_hint: {'center_x': 0.5, 'center_y': 0.75}
+
+                MDToolbar:
+                    elevation: 10
+                    title: 'Settings'
+                    left_action_items: [['chevron-left', lambda x: app.change_screen('MainScreen', 'right')]]
+                
+                MDRoundFlatButton:
+                    text: 'Theme'
+                    pos_hint: {'center_x':0.5, 'center_y':0.5}
+                    text_color: app.theme_cls.primary_color
+                    on_press:
+                        app.show_theme_picker()
+
+                MDRoundFlatButton:
+                    text: 'Save'
+                    pos_hint: {'center_x':0.5, 'center_y':0.5}
+                    text_color: app.theme_cls.primary_color
+                    on_press:
+                        app.change_screen('MainScreen', 'right')
+                
+                Widget:
 
     MDNavigationDrawer:
         id: nav_drawer
@@ -161,6 +188,17 @@ NavigationLayout:
                         IconLeftWidget:
                             icon: 'folder-download'
                     
+                    OneLineIconListItem:
+                        text: 'Settings'
+                        on_release:
+                            nav_drawer.toggle_nav_drawer()
+                            app.change_screen('SettingsScreen', 'left')
+                        IconLeftWidget:
+                            icon: 'settings'
+                            on_release:
+                                nav_drawer.toggle_nav_drawer()
+                                app.change_screen('SettingsScreen', 'left')
+
                     OneLineIconListItem:
                         text: 'About'
                         on_release:

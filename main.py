@@ -1,31 +1,28 @@
-from kivy.core import handle_win_lib_import_error
-from kivy.uix.behaviors import button
 from kivy.uix.image import Image, AsyncImage
-import kivymd
 from kivymd.app import MDApp
 from kivymd.uix.label import MDLabel, MDIcon
-from kivymd.uix.screen import MDScreen
-from kivy.uix.screenmanager import Screen, ScreenManager
+#from kivymd.uix.screen import MDScreen
+#from kivy.uix.screenmanager import Screen, ScreenManager
 from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFlatButton, MDRectangleFlatIconButton, MDRoundFlatButton
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.list import ImageLeftWidget, TwoLineIconListItem, MDList, IconLeftWidget, TwoLineAvatarListItem, OneLineAvatarListItem
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.toast import toast
-from kivy.uix.boxlayout import BoxLayout
-from kivy.lang import Builder
-from kivy.uix.scrollview import ScrollView
+#from kivy.uix.boxlayout import BoxLayout
+#from kivy.lang import Builder
+#from kivy.uix.scrollview import ScrollView
 from kivy.properties import ObjectProperty
 from kivy.core.window import Window
 from kivy.utils import platform
-from kivy.clock import Clock
-from kivy.loader import Loader
+#from kivy.clock import Clock
+#from kivy.loader import Loader
 from kivy.core.audio import SoundLoader
-from kivy.app import App
-from kivy.base import ExceptionManager, ExceptionHandler
 #from kivymd.uix.spinner import MDSpinner
+from kivymd.uix.picker import MDThemePicker
+from kivymd.theming import ThemeManager
 ##############################
-from concurrent.futures import ThreadPoolExecutor
+#from concurrent.futures import ThreadPoolExecutor
 import threading
 import requests
 import base64
@@ -44,6 +41,10 @@ if platform == 'android':
 
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
+colors = ['Red', 'Pink', 'Purple', 'DeepPurple', 'Indigo', 'Blue', 'LightBlue', 'Cyan', 'Teal', 'Green', 'LightGreen', 'Lime', 'Yellow', 'Amber', 'Orange', 'DeepOrange', 'Brown', 'Gray', 'BlueGray']
+hue = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', 'A100', 'A200', 'A400', 'A700']
+theme = ['Light', 'Dark']
+bg = ['bg_light', 'bg_normal', 'bg_dark', 'bg_darkest']
 
 class MyApp(MDApp):
     title = "Black Hole"
@@ -51,8 +52,13 @@ class MyApp(MDApp):
 #    obj = ObjectProperty(None)
 #    path = download_dir_path
     def build(self):
-        self.theme_cls.theme_style = "Light"#Dark"
-        self.theme_cls.bg_darkest
+        #with open('data.json', "r") as f:
+        #    self.data = json.loads(f.read())
+        #self.theme_cls = ThemeManager()
+        #self.theme_cls.primary_palette = self.data['color']
+        self.theme_cls.theme_style = "Dark"#self.data['theme']
+        #self.theme_cls.primary_hue = self.data['hue']
+        #self.theme_cls.bg_darkest
         #Loader.loading_image = 'blank.jpg'#'giphy.gif'
         #return Builder.load_string(main)
 
@@ -76,6 +82,9 @@ class MyApp(MDApp):
         else:
             os.mkdir(self.data_path)
 
+    def show_theme_picker(self):
+        self.pick = MDThemePicker()
+        self.pick.open()
 
     def download_list(self):
         self.down_list = self.root.ids.downloadlist
