@@ -26,7 +26,6 @@ import webbrowser
 from pyDes import *
 from mutagen.mp4 import MP4, MP4Cover
 
-os.environ["KIVY_AUDIO"] = "ffpyplayer"
 
 if platform == 'android':
     import android
@@ -59,8 +58,8 @@ class MyApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Window.bind(on_keyboard=self.events)
-        self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
+        self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = os.path.join(self.user_data_dir, 'cache')
         self.manager_open = False
         self.file_manager = MDFileManager(
             exit_manager=self.exit_manager,
@@ -221,7 +220,7 @@ class MyApp(MDApp):
         self.sound = SoundLoader.load(link)
         #close_btn = MDFlatButton(text="Close", on_release=lambda x: self.stop_song())
         #self.dia = MDDialog(title="Playing", text = "Feature under development!", size_hint=(0.7,1), buttons=[close_btn])
-        self.title_play_label = (MDLabel(text=link.strip(self.path).replace('.m4a','').strip('/').strip('\\'), halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1.1}))
+        self.title_play_label = (MDLabel(text=link.strip(self.path).strip('.m4a').strip('/').strip('\\'), halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1.1}))
         self.root.ids.PlayScreen.add_widget(self.title_play_label)
         self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.55}, size_hint_x = 0.5, value = 0, color = self.theme_cls.primary_color)
         self.root.ids.PlayScreen.add_widget(self.progress)
@@ -271,6 +270,7 @@ class MyApp(MDApp):
         self.root.ids.PlayScreen.remove_widget(self.title_play_label)
 
     def play_bar(self, length):
+        count = 0
         while True:
             temp = MDLabel(text="{}/{}".format(self.convert_sec(self.sound.get_pos()), self.convert_sec(length)), halign="right", theme_text_color='Primary', pos_hint={"top":1.05})
             self.root.ids.PlayScreen.add_widget(temp)
@@ -279,8 +279,11 @@ class MyApp(MDApp):
             time.sleep(1)
             self.root.ids.PlayScreen.remove_widget(temp)
             if self.progress.value == 0:
-                print('breaked loop')
-                break
+                if count >0:
+                    print('breaked loop')
+                    break
+                else:
+                    count+=1
         #self.dia.dismiss()
 
     def save_settings(self):
