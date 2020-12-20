@@ -167,11 +167,11 @@ class MyApp(MDApp):
         t1 = threading.Thread(target=self.fetch_details)
         t1.start()
 
-        self.details_screen.add_widget(AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}))
+        self.details_screen.add_widget(AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}, size_hint_y=5, size_hint_x=5))
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.95}))
         self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
-        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.9, "center_y":0.7}, md_bg_color=(1,1,1,1), on_press=lambda x: self.tap_target_start()) #self.play_song(os.path.join(self.song_dwn_url))))
+        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.9, "center_y":0.6}, md_bg_color=(1,1,1,1), on_press=lambda x: self.tap_target_start()) #self.play_song(os.path.join(self.song_dwn_url))))
         self.details_screen.add_widget(self.play_btn)
         self.tap_target_view = MDTapTargetView(
             widget=self.play_btn,
