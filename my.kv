@@ -1,13 +1,10 @@
+#:import MagicBehavior kivymd.uix.behaviors.MagicBehavior
+<MagicButton@MagicBehavior+MDRoundFlatButton>
 <Root@BoxLayout>
     orientation: 'vertical'
 
     MDToolbar:
         title: app.title
-
-<Check@MDCheckbox>:
-    group: 'group'
-    size_hint: None, None
-    size: dp(48), dp(48)
 
 NavigationLayout:
     ScreenManager:
@@ -46,11 +43,12 @@ NavigationLayout:
                 pos_hint: {'center_x': 0.5, 'center_y': 0.7}
                 size_hint:(0.5,0.08)
             
-            MDRoundFlatButton:
+            MagicButton:
                 text: 'SEARCH'
                 pos_hint: {'center_x':0.5, 'y':0.5}
                 text_color: app.theme_cls.primary_color
                 on_press:
+                    self.grow()
                     app.show_data()
                     
             MDSpinner:
@@ -100,6 +98,40 @@ NavigationLayout:
                     size_hint: (1, 2.5)
                     MDList:
                         id: downloadlist
+        Screen:
+            id: PlayScreen
+            name: 'PlayScreen'
+            BoxLayout:
+                orientation: 'vertical'
+                MDToolbar:
+                    title: 'Playing'
+                    elevation: 10
+                    left_action_items: [['chevron-left', lambda x: app.stop_song()]]
+                Widget:
+            
+            MDIconButton:
+                icon: "stop"
+                pos_hint:{"center_x": .5, "center_y": .5}
+                theme_text_color:"Custom"
+                text_color:self.theme_cls.primary_color
+                on_release: app.stop_song()
+
+            MDIconButton:
+                icon: "rewind-5"
+                pos_hint:{"center_x": .425, "center_y": .5}
+                on_release: app.rewind()
+            MDIconButton:
+                icon:"fast-forward-5"
+                pos_hint:{"center_x": .575, "center_y": .5}
+                on_release: app.forward()
+            MDIconButton:
+                icon:"volume-plus"
+                pos_hint:{"center_x": .7, "center_y": .5}
+                on_release: app.increase()
+            MDIconButton:
+                icon:"volume-minus"
+                pos_hint:{"center_x": .3, "center_y": .5}
+                on_release: app.decrease()
 
         Screen:
             id: AboutScreen
@@ -123,7 +155,7 @@ NavigationLayout:
                     pos_hint: {'center_x':0.5}
                     text_color: app.theme_cls.primary_color
                     on_press:
-                        app.change_screen('MainScreen', 'right')
+                        app.contact_us()
 
         Screen:
             id: SettingsScreen
@@ -138,12 +170,20 @@ NavigationLayout:
                     elevation: 10
                     title: 'Settings'
                     left_action_items: [['chevron-left', lambda x: app.change_screen('MainScreen', 'right')]]
-
+                    
+                FloatLayout:
+                    MDLabel:
+                        text: "     Dark Mode"
+                        pos_hint: {'center_y': .5}
+                    MDSwitch:
+                        pos_hint: {'center_x': .8, 'center_y': .5}
+                        on_active: app.change_theme()
                 MDRoundFlatButton:
                     text: 'Save'
                     pos_hint: {'center_x':0.5, 'center_y':0.5}
                     text_color: app.theme_cls.primary_color
                     on_press:
+                        app.save_settings()
                         app.change_screen('MainScreen', 'right')
                 
                 Widget:
@@ -152,21 +192,44 @@ NavigationLayout:
         id: nav_drawer
         BoxLayout:
             orientation: 'vertical'
+            padding: "10dp"
+            spacing: "8dp"
             
+            AnchorLayout:
+                anchor_x: "left"
+                size_hint_y: None
+                height: avatar.height
 
-            Image:
-                source: './bh-circle_cropped.png'
+                Image:
+                    id: avatar
+                    size_hint: None, None
+                    source: "./bh-circle_cropped.png"
+            MDLabel:
+                text: "Black Hole™"
+                font_style: "Button"
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            MDLabel:
+                text: "blackholeyoucantescape@gmail.com"
+                font_style: "Caption"
+                size_hint_y: None
+                height: self.texture_size[1]
 
             ScrollView:
                 MDList:
                     OneLineIconListItem:
                         text: 'Home'
                         pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
                         on_release:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('MainScreen', 'right')
                         IconLeftWidget:
                             icon: 'home'
+                            theme_text_color: "Custom"
+                            text_color: app.theme_cls.primary_color
                             on_release:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('MainScreen', 'right')
