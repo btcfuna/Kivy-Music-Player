@@ -26,6 +26,8 @@ import webbrowser
 from pyDes import *
 from mutagen.mp4 import MP4, MP4Cover
 
+os.environ["KIVY_AUDIO"] = "ffpyplayer"
+
 if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission
@@ -167,7 +169,7 @@ class MyApp(MDApp):
         t1 = threading.Thread(target=self.fetch_details)
         t1.start()
 
-        self.details_screen.add_widget(AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}, size_hint_y=5, size_hint_x=5))
+        self.details_screen.add_widget(AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}))
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.95}))
         self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))

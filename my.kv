@@ -45,10 +45,11 @@ NavigationLayout:
             
             MagicButton:
                 text: 'SEARCH'
+                id: search_btn
                 pos_hint: {'center_x':0.5, 'y':0.5}
                 text_color: app.theme_cls.primary_color
                 on_press:
-                    self.wobble()
+                    self.grow()
                 on_release:
                     app.show_data()
                     
