@@ -39,6 +39,7 @@ song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails
 class MyApp(MDApp):
     title = "Black Hole"
     status = True
+    last_screen = 'MainScreen'
     def build(self):
         #self.theme_cls = ThemeManager()
         self.theme_cls.primary_palette = "Blue"
@@ -92,7 +93,7 @@ class MyApp(MDApp):
             self.add_down_song(items)
     
     def add_down_song(self, item):
-        lst = OneLineAvatarListItem(text=item.strip('.m4a'), on_press=lambda x: self.play_song(os.path.join(self.path, item)))
+        lst = OneLineAvatarListItem(text=item.strip('.m4a'), on_press=lambda x: self.play_song(item.split('-')[0], '-'.join(item.split('-')[1:]).strip('.m4a'),os.path.join(self.path, item)))
         lst.add_widget(IconLeftWidget(icon='music'))
         self.down_list.add_widget(lst)
 
@@ -172,7 +173,7 @@ class MyApp(MDApp):
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.95}))
         self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
-        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.9, "center_y":0.6}, md_bg_color=(1,1,1,1), on_press=lambda x: self.tap_target_start()) #self.play_song(os.path.join(self.song_dwn_url))))
+        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.9, "center_y":0.6}, md_bg_color=(1,1,1,1), on_press=lambda x: self.play_song(self.song_name, self.artist_name, self.song_dwn_url))#self.tap_target_start())
         self.details_screen.add_widget(self.play_btn)
         self.tap_target_view = MDTapTargetView(
             widget=self.play_btn,
@@ -184,6 +185,7 @@ class MyApp(MDApp):
         
         
     def change_screen(self, screen, direction):
+        self.last_screen = self.root.ids.screen_manager.current
         self.root.ids.screen_manager.transition.direction = direction
         self.root.ids.screen_manager.current = screen
     
@@ -215,12 +217,12 @@ class MyApp(MDApp):
         t2.start()
 
 
-    def play_song(self, link):
+    def play_song(self, song, artist, link):
         self.change_screen("PlayScreen", "left")
         self.sound = SoundLoader.load(link)
         #close_btn = MDFlatButton(text="Close", on_release=lambda x: self.stop_song())
         #self.dia = MDDialog(title="Playing", text = "Feature under development!", size_hint=(0.7,1), buttons=[close_btn])
-        self.title_play_label = (MDLabel(text=link.strip(self.path).strip('.m4a').strip('/').strip('\\'), halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1.1}))
+        self.title_play_label = (MDLabel(text=song+' - '+artist, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1.1}))
         self.root.ids.PlayScreen.add_widget(self.title_play_label)
         self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.55}, size_hint_x = 0.5, value = 0, color = self.theme_cls.primary_color)
         self.root.ids.PlayScreen.add_widget(self.progress)
@@ -266,7 +268,10 @@ class MyApp(MDApp):
         self.sound.volume -= 0.1
     def stop_song(self):
         self.sound.stop()
-        self.change_screen('DownloadsScreen', 'right')
+        if self.last_screen == 'DownloadsScreen':
+            self.change_screen('DownloadsScreen', 'right')
+        else:
+            self.change_screen(self.last_screen, 'right')
         self.root.ids.PlayScreen.remove_widget(self.title_play_label)
 
     def play_bar(self, length):
