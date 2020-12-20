@@ -315,6 +315,7 @@ class MyApp(MDApp):
             with requests.get(self.song_dwn_url, stream=True) as r, open(fname, "wb") as f:
                 file_size = int(r.headers['Content-Length'])
                 total= int(file_size / 1024)
+                self.dia.add_widget(MDLabel(text='{:.2f} MB'.format(file_size/(1024*1024)), halign='right'))
                 for chunk in r.iter_content(chunk_size=1024):
                     if self.status:
                         f.write(chunk)
