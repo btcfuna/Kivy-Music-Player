@@ -69,11 +69,14 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        Window.bind(on_keyboard=self.events)
-        self.path = os.path.join(os.getenv(ext_path, 'Songs'))#'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = os.path.join(self.user_data_dir, 'cache')
-        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')#'data.json'
         self.user_data = JsonStore(self.user_data_path)
+        Window.bind(on_keyboard=self.events)
+        if self.user_data.exists('download_path'):
+            self.path = self.user_data.get('download_path')['path']
+        else:
+            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = os.path.join(self.user_data_dir, 'cache')
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -187,12 +190,13 @@ class MyApp(MDApp):
         self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
         t1 = threading.Thread(target=self.fetch_details)
         t1.start()
-
+        self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
         self.details_screen.add_widget(AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}))
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.95}))
-        self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
+        #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.9, "center_y":0.6}, md_bg_color=(1,1,1,1), on_press=lambda x: self.play_song(self.song_name, self.artist_name, self.song_dwn_url))#self.tap_target_start())
+        self.details_screen.add_widget(MDIconButton(icon='heart-outline', pos_hint={"center_x":0.1, "center_y":0.1}, on_press=lambda x: self.add_fav()))
         self.details_screen.add_widget(self.play_btn)
         self.tap_target_view = MDTapTargetView(
             widget=self.play_btn,
@@ -202,7 +206,9 @@ class MyApp(MDApp):
         )
         self.details_screen.add_widget(MDRoundFlatButton(text='Download', pos_hint={'center_x':0.5, "center_y":0.2}, on_press=lambda x: self.download_bar()))
         
-        
+    def add_fav(self):
+        pass
+
     def change_screen(self, screen, direction):
         self.last_screen = self.root.ids.screen_manager.current
         self.root.ids.screen_manager.transition.direction = direction
@@ -318,11 +324,11 @@ class MyApp(MDApp):
         webbrowser.open_new(args[0])
             
     def contact_us(self):
-        bottom_sheet_menu = MDGridBottomSheet(radius=15,radius_from='top', animation=True)
+        bottom_sheet_menu = MDGridBottomSheet(radius=15,radius_from='top')
         data = [
             {"name":"Telegram", "icon":"telegram", "link":"https://t.me/sangwan5688"},
-#            {"name":"Instagram", "icon":"instagram", "link":"www.instagram.com"},
-#            {"name":"Twitter", "icon":"twitter-box", "link":"www.twitter.com"},
+            {"name":"Instagram", "icon":"instagram", "link":"www.instagram.com"},
+            {"name":"Twitter", "icon":"twitter-box", "link":"www.twitter.com"},
             {"name":"Mail", "icon":"gmail", "link":"https://mail.google.com/mail/?view=cm&fs=1&to=blackholeyoucantescape@gmail.com&su=Regarding+Mobile+App"},
             {"name":"Facebook", "icon":"facebook-box", "link":"www.facebook.com"},
         ]
@@ -395,6 +401,7 @@ class MyApp(MDApp):
         if os.path.isdir(path):
             self.path = path
             toast("Songs will be downloaded to: "+path)
+            self.user_data.put('download_path', path=self.path)
         else:
             toast("No directory selected")
 
