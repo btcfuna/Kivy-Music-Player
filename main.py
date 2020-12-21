@@ -72,7 +72,8 @@ class MyApp(MDApp):
         Window.bind(on_keyboard=self.events)
         self.path = os.path.join(os.getenv(ext_path, 'Songs'))#'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
         self.data_path = os.path.join(self.user_data_dir, 'cache')
-        self.user_data = JsonStore(os.path.join(self.user_data_dir, 'data.json'))
+        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
+        self.user_data = JsonStore(self.user_data_path)
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -88,7 +89,7 @@ class MyApp(MDApp):
             pass
         else:
             os.mkdir(self.data_path)
-        if not os.path.exists(os.path.join(self.user_data_dir, 'data.json')):
+        if not os.path.exists(self.user_data_path):
             self.user_data.put('theme', mode='Light')
             self.user_data.put('accent', color='Blue')
 
