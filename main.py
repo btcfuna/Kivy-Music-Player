@@ -14,6 +14,7 @@ from kivy.utils import platform
 from kivy.core.audio import SoundLoader
 from kivymd.uix.bottomsheet import MDGridBottomSheet
 from kivymd.uix.taptargetview import MDTapTargetView
+from kivy.storage.jsonstore import JsonStore
 ##############################
 import threading
 import requests
@@ -29,8 +30,10 @@ from mutagen.mp4 import MP4, MP4Cover
 
 if platform == 'android':
     import android
-    from android.permissions import request_permissions, Permission
+    from android.permissions import request_permissions, Permission, check_permission
     request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+    from android.storage import primary_external_storage_path
+    ext_path = primary_external_storage_path()
 
 
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
@@ -42,8 +45,16 @@ class MyApp(MDApp):
     last_screen = 'MainScreen'
     def build(self):
         #self.theme_cls = ThemeManager()
-        self.theme_cls.primary_palette = "Blue"
-        self.theme_cls.theme_style = "Light"
+        
+        #store.delete('tito')
+        if self.user_data.exists('theme'):
+            self.theme_cls.theme_style = self.user_data.get('theme')['mode']
+        else:
+            self.user_data.put('theme', mode='Light')
+        if self.user_data.exists('accent'):
+            self.theme_cls.primary_palette = self.user_data.get('accent')['color']
+        if self.theme_cls.theme_style == "Dark":
+            self.root.ids.dark_mode_switch.active = True
         #self.theme_cls.primary_hue = "A400"
         self.theme_cls.accent_palette = self.theme_cls.primary_palette#'Blue'
         #self.theme_cls.bg_darkest
@@ -59,8 +70,10 @@ class MyApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Window.bind(on_keyboard=self.events)
-        self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.path = os.path.join(os.getenv(ext_path, 'Songs'))#'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
         self.data_path = os.path.join(self.user_data_dir, 'cache')
+        self.user_data = JsonStore(os.path.join(self.user_data_dir, 'data.json'))
+        #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
             exit_manager=self.exit_manager,
@@ -75,12 +88,17 @@ class MyApp(MDApp):
             pass
         else:
             os.mkdir(self.data_path)
+        if not os.path.exists(os.path.join(self.user_data_dir, 'data.json')):
+            self.user_data.put('theme', mode='Light')
+            self.user_data.put('accent', color='Blue')
 
     def change_theme(self):
-        if self.theme_cls.theme_style == "Dark":
-            self.theme_cls.theme_style = "Light"
-        else:
+        if self.root.ids.dark_mode_switch.active == True:
             self.theme_cls.theme_style = "Dark"
+            self.user_data.put('theme', mode='Dark')
+        else:
+            self.theme_cls.theme_style = "Light"
+            self.user_data.put('theme', mode='Light')
 
     def download_list(self):
         self.down_list = self.root.ids.downloadlist
@@ -258,10 +276,10 @@ class MyApp(MDApp):
         	self.sound.stop()
     def forward(self):
         if self.sound:
-            self.sound.seek(self.sound.get_pos() + 5)
+            self.sound.seek(self.sound.get_pos() + 10)
     def rewind(self):
         if self.sound.get_pos() >= 5:
-            self.sound.seek(self.sound.get_pos() - 5)
+            self.sound.seek(self.sound.get_pos() - 10)
     def increase(self):
         self.sound.volume += 0.1
     def decrease(self):

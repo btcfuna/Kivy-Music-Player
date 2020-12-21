@@ -179,6 +179,8 @@ NavigationLayout:
                         theme_text_color: 'Primary'
                         pos_hint: {'center_y': .5}
                     MDSwitch:
+                        id: dark_mode_switch
+                        active: False
                         pos_hint: {'center_x': .8, 'center_y': .5}
                         on_active: app.change_theme()
                 MDRoundFlatButton:
