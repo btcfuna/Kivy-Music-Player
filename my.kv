@@ -150,7 +150,7 @@ NavigationLayout:
                     left_action_items: [['chevron-left', lambda x: app.change_screen('MainScreen', 'right')]]
 
                 Image:
-                    source: './made.png'
+                    source: './made-black.png' if app.theme_cls.theme_style == "Light" else './made-white.png'
 
                 MDRoundFlatButton:
                     text: 'Contact us'
