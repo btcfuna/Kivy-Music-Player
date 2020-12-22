@@ -15,6 +15,7 @@ from kivy.core.audio import SoundLoader
 from kivymd.uix.bottomsheet import MDGridBottomSheet
 from kivymd.uix.taptargetview import MDTapTargetView
 from kivy.storage.jsonstore import JsonStore
+from kivy.loader import Loader
 from kivy.lang import Builder
 ##############################
 import threading
@@ -57,7 +58,7 @@ class MyApp(MDApp):
         #self.theme_cls.primary_hue = "A400"
         self.theme_cls.accent_palette = self.theme_cls.primary_palette#'Blue'
         #self.theme_cls.bg_darkest
-        #Loader.loading_image = 'blank.jpg'#'giphy.gif'
+        Loader.loading_image = 'cover.jpg'#'giphy.gif'
         #return Builder.load_string(main)
 
     def tap_target_start(self):
@@ -68,14 +69,14 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = 'data.json'#os.path.join(self.user_data_dir, 'data.json')
         self.user_data = JsonStore(self.user_data_path)
         Window.bind(on_keyboard=self.events)
         if self.user_data.exists('download_path'):
             self.path = self.user_data.get('download_path')['path']
         else:
-            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = os.path.join(self.user_data_dir, 'cache')
+            self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -225,10 +226,8 @@ class MyApp(MDApp):
         self.root.ids.screen_manager.transition.direction = direction
         self.root.ids.screen_manager.current = screen
         if self.last_screen == 'SongDetailsScreen' or self.last_screen == 'PlayScreen':
-            try:
+            if self.sound.status == 'play':
                 self.sound.stop()
-            except:
-                pass
     
     def cancel(self):
         self.download_progress.color = 1, 0, 0, 1
@@ -262,19 +261,14 @@ class MyApp(MDApp):
         if self.sound:
             #print("Sound found at %s" % self.sound.source)
             #print("Sound is %.3f seconds" % self.sound.length)
-            print(self.sound.state)
             if self.sound.state == 'stop':
-                print('state at stop changing icon')
                 self.play_btn.icon = 'pause'
-                print('Playing')
                 self.sound.play()
                 lnth = self.sound.length
                 t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
                 t2.start()
             elif self.sound.state == 'play':
-                print('state at stop changing icon')
                 self.play_btn.icon = 'play'
-                print('Stoping')
                 self.sound.stop()
         else:
             time.sleep(0.5)
@@ -284,7 +278,7 @@ class MyApp(MDApp):
         temp2 = MDLabel(text="{}".format(self.convert_sec(length), halign="right", theme_text_color='Primary', pos_hint={"top":0.9}))
         self.root.ids.SongDetailsScreen.add_widget(temp2)
         while True:
-#            count = 0
+
             MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1})
             temp = MDLabel(text="{}".format(self.convert_sec(self.sound.get_pos()), halign="left", theme_text_color='Primary', pos_hint={"top":1}))
             self.root.ids.SongDetailsScreen.add_widget(temp)
@@ -294,8 +288,6 @@ class MyApp(MDApp):
             time.sleep(1)
             self.root.ids.SongDetailsScreen.remove_widget(temp)
             if self.sound.state == 'stop':
-#                count += 1
-#                if count >= 2:
                 print('breaked loop')
                 break
 
