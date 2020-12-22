@@ -264,13 +264,17 @@ class MyApp(MDApp):
             #print("Sound is %.3f seconds" % self.sound.length)
             print(self.sound.state)
             if self.sound.state == 'stop':
+                print('state at stop changing icon')
                 self.play_btn.icon = 'pause'
+                print('Playing')
                 self.sound.play()
                 lnth = self.sound.length
                 t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
                 t2.start()
-            if self.sound.state == 'play':
+            elif self.sound.state == 'play':
+                print('state at stop changing icon')
                 self.play_btn.icon = 'play'
+                print('Stoping')
                 self.sound.stop()
         else:
             time.sleep(0.5)
@@ -280,7 +284,7 @@ class MyApp(MDApp):
         temp2 = MDLabel(text="{}".format(self.convert_sec(length), halign="right", theme_text_color='Primary', pos_hint={"top":0.9}))
         self.root.ids.SongDetailsScreen.add_widget(temp2)
         while True:
-            count = 0
+#            count = 0
             MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1})
             temp = MDLabel(text="{}".format(self.convert_sec(self.sound.get_pos()), halign="left", theme_text_color='Primary', pos_hint={"top":1}))
             self.root.ids.SongDetailsScreen.add_widget(temp)
@@ -290,10 +294,10 @@ class MyApp(MDApp):
             time.sleep(1)
             self.root.ids.SongDetailsScreen.remove_widget(temp)
             if self.sound.state == 'stop':
-                count += 1
-                if count >= 2:
-                    print('breaked loop')
-                    break
+#                count += 1
+#                if count >= 2:
+                print('breaked loop')
+                break
 
     def play_song(self, song, artist, link):
         self.change_screen("PlayScreen", "left")
