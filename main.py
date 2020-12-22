@@ -193,7 +193,7 @@ class MyApp(MDApp):
         self.fetch_thread.start()
         self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.1, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
         
-        song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}, size_hint=(1,1), allow_stretch=True)
+        song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}, size_hint=(0.7,0.7), allow_stretch=True)
         self.details_screen.add_widget(song_image)
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.95}))
@@ -280,6 +280,7 @@ class MyApp(MDApp):
         temp2 = MDLabel(text="{}".format(self.convert_sec(length), halign="right", theme_text_color='Primary', pos_hint={"top":0.9}))
         self.root.ids.SongDetailsScreen.add_widget(temp2)
         while True:
+            count = 0
             MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1})
             temp = MDLabel(text="{}".format(self.convert_sec(self.sound.get_pos()), halign="left", theme_text_color='Primary', pos_hint={"top":1}))
             self.root.ids.SongDetailsScreen.add_widget(temp)
@@ -289,8 +290,10 @@ class MyApp(MDApp):
             time.sleep(1)
             self.root.ids.SongDetailsScreen.remove_widget(temp)
             if self.sound.state == 'stop':
-                print('breaked loop')
-                break
+                count += 1
+                if count >= 2:
+                    print('breaked loop')
+                    break
 
     def play_song(self, song, artist, link):
         self.change_screen("PlayScreen", "left")
