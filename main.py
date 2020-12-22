@@ -15,6 +15,7 @@ from kivy.core.audio import SoundLoader
 from kivymd.uix.bottomsheet import MDGridBottomSheet
 from kivymd.uix.taptargetview import MDTapTargetView
 from kivy.storage.jsonstore import JsonStore
+from kivy.lang import Builder
 ##############################
 import threading
 import requests
@@ -190,10 +191,12 @@ class MyApp(MDApp):
         self.album = self.search_data[i]['album']
         self.image_url = self.search_data[i]['image'].replace('50x50', '500x500')
         self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
-        t1 = threading.Thread(target=self.fetch_details)
-        t1.start()
+        self.fetch_thread = threading.Thread(target=self.fetch_details)
+        self.fetch_thread.start()
         self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.1, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
-        self.details_screen.add_widget(AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}))
+        
+        song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.8}, size_hint=(1,1), allow_stretch=True)
+        self.details_screen.add_widget(song_image)
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.95}))
         #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
@@ -223,6 +226,11 @@ class MyApp(MDApp):
         self.last_screen = self.root.ids.screen_manager.current
         self.root.ids.screen_manager.transition.direction = direction
         self.root.ids.screen_manager.current = screen
+        if self.last_screen == 'SongDetailsScreen':
+            try:
+                self.sound.stop()
+            except:
+                pass
     
     def cancel(self):
         self.download_progress.color = 1, 0, 0, 1
@@ -252,32 +260,37 @@ class MyApp(MDApp):
         t2.start()
 
     def play_song_online(self):
+        self.fetch_thread.join()
         if self.sound:
             #print("Sound found at %s" % self.sound.source)
             #print("Sound is %.3f seconds" % self.sound.length)
-            self.sound.play()
-            lnth = self.sound.length
-            t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
-            t2.start()
+            print(self.sound.state)
+            if self.sound.state == 'stop':
+                self.play_btn.icon = 'pause'
+                self.sound.play()
+                lnth = self.sound.length
+                t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
+                t2.start()
+            if self.sound.state == 'play':
+                self.play_btn.icon = 'play'
+                self.sound.stop()
         else:
-            time.sleep(1)
+            time.sleep(0.5)
             self.play_song_online
     
     def online_play_bar(self, length):
-        count = 0
-        temp2 = MDLabel(text="{}".format(self.convert_sec(self.convert_sec(length)), halign="right", theme_text_color='Primary', pos_hint={"center_x":0.9, "center_y": .3}))
+        temp2 = MDLabel(text="{}".format(self.convert_sec(length), halign="right", theme_text_color='Primary', pos_hint={"top":0.9}))
         self.root.ids.SongDetailsScreen.add_widget(temp2)
         while True:
-            temp = MDLabel(text="{}".format(self.convert_sec(self.sound.get_pos()), halign="left", theme_text_color='Primary', pos_hint={"center_x":0.1, "center_y": .3}))
-            #self.root.ids.SongDetailsScreen.add_widget(temp)
+            MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1})
+            temp = MDLabel(text="{}".format(self.convert_sec(self.sound.get_pos()), halign="left", theme_text_color='Primary', pos_hint={"top":1}))
+            self.root.ids.SongDetailsScreen.add_widget(temp)
             
             self.play_progress.value = 100*(self.sound.get_pos())/length
             #print(self.progress.value)
             time.sleep(1)
             self.root.ids.SongDetailsScreen.remove_widget(temp)
-            if self.play_progress.value > 1:
-                count +=1
-            if self.play_progress.value == 0 and count>1:
+            if self.sound.state == 'stop':
                 print('breaked loop')
                 break
 
