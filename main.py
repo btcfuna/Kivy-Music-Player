@@ -33,8 +33,6 @@ if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission, check_permission
     request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
-    from android.storage import primary_external_storage_path
-    ext_path = primary_external_storage_path()
 
 
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
@@ -70,21 +68,21 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.user_data_path = 'data.json'#os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
         self.user_data = JsonStore(self.user_data_path)
         Window.bind(on_keyboard=self.events)
         if self.user_data.exists('download_path'):
             self.path = self.user_data.get('download_path')['path']
         else:
-            self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
+            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = os.path.join(self.user_data_dir, 'cache')
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
             exit_manager=self.exit_manager,
             select_path=self.select_path,
         )
-        self.file_manager.ext = [".m4a"]
+        self.file_manager.ext = [".m4a", ".mp3"]
         if os.path.exists(self.path):
             pass
         else:
@@ -226,7 +224,7 @@ class MyApp(MDApp):
         self.last_screen = self.root.ids.screen_manager.current
         self.root.ids.screen_manager.transition.direction = direction
         self.root.ids.screen_manager.current = screen
-        if self.last_screen == 'SongDetailsScreen':
+        if self.last_screen == 'SongDetailsScreen' or self.last_screen == 'PlayScreen':
             try:
                 self.sound.stop()
             except:
@@ -297,6 +295,8 @@ class MyApp(MDApp):
     def play_song(self, song, artist, link):
         self.change_screen("PlayScreen", "left")
         self.sound = SoundLoader.load(link)
+        self.root.ids.PlayScreen.clear_widgets()
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.1, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'right')))
         #close_btn = MDFlatButton(text="Close", on_release=lambda x: self.stop_song())
         #self.dia = MDDialog(title="Playing", text = "Feature under development!", size_hint=(0.7,1), buttons=[close_btn])
         self.title_play_label = (MDLabel(text=song+' - '+artist, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1.1}))
@@ -305,12 +305,12 @@ class MyApp(MDApp):
         self.root.ids.PlayScreen.add_widget(self.progress)
         #self.dia.add_widget(self.progress)
         
-        #self.dia.add_widget(MDIconButton(icon="pause", pos_hint={"x": .5, "center_y": .5}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.pause()))
-        #self.dia.add_widget(MDIconButton(icon="play", pos_hint={"x": .5, "center_y": .5}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.play()))
-        #self.dia.add_widget(MDIconButton(icon="rewind-5", pos_hint={"x": .4, "y": .5}, on_release=lambda x: self.rewind()))
-        #self.dia.add_widget(MDIconButton(icon="fast-forward-5", pos_hint={"x": .6, "center_y": .5}, on_release=lambda x: self.forward()))
-        #self.dia.add_widget(MDIconButton(icon="volume-plus", pos_hint={"x": .7, "center_y": .5}, on_release=lambda x: self.increase()))
-        #self.dia.add_widget(MDIconButton(icon="volume-minus", pos_hint={"x": .3, "center_y": .5}, on_release=lambda x: self.decrease()))
+        #self.root.ids.PlayScreen.add_widget(MDIconButton(icon="pause", pos_hint={"x": .5, "center_y": .5}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.pause()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="stop", pos_hint={"center_x": .5, "center_y": .5}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.stop_song()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="rewind-10", pos_hint={"center_x": .4, "center_y": .5}, on_release=lambda x: self.rewind()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="fast-forward-10", pos_hint={"center_x": .6, "center_y": .5}, on_release=lambda x: self.forward()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .7, "center_y": .5}, on_release=lambda x: self.increase()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .3, "center_y": .5}, on_release=lambda x: self.decrease()))
         #self.dia.open()
         #print(self.song_dwn_url)
 
@@ -356,7 +356,6 @@ class MyApp(MDApp):
         self.root.ids.PlayScreen.remove_widget(self.title_play_label)
 
     def offline_play_bar(self, length):
-        count = 0
         while True:
             temp = MDLabel(text="{}/{}".format(self.convert_sec(self.sound.get_pos()), self.convert_sec(length)), halign="right", theme_text_color='Primary', pos_hint={"top":1.05})
             self.root.ids.PlayScreen.add_widget(temp)
@@ -364,9 +363,7 @@ class MyApp(MDApp):
             #print(self.progress.value)
             time.sleep(0.5)
             self.root.ids.PlayScreen.remove_widget(temp)
-            if self.progress.value > 1:
-                count +=1
-            if self.progress.value == 0 and count>1:
+            if self.sound.state == 'stop':
                 print('breaked loop')
                 break
         #self.dia.dismiss()
