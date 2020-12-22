@@ -167,7 +167,9 @@ class MyApp(MDApp):
         self.featured_artist = self.song_data["featured_artists"]
         self.year = self.song_data["year"]
         self.genre = (self.song_data["language"]).capitalize()
+        self.sound = SoundLoader.load(self.song_dwn_url)
         print('finished fetching details')
+        
 
     def decrypt_url(url):
         des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0",pad=None, padmode=PAD_PKCS5)
@@ -210,7 +212,7 @@ class MyApp(MDApp):
         self.details_screen.add_widget(MDIconButton(icon="fast-forward-10", pos_hint={"center_x": .6, "center_y": .3}, on_release=lambda x: self.forward()))
         self.details_screen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .7, "center_y": .3}, on_release=lambda x: self.increase()))
         self.details_screen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .3, "center_y": .3}, on_release=lambda x: self.decrease()))
-        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.3}, md_bg_color=(1,1,1,1), on_press=lambda x: self.play_song(self.song_name, self.artist_name, self.song_dwn_url))#self.tap_target_start())
+        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.3}, md_bg_color=(1,1,1,1), on_press=lambda x: self.play_song_online())#self.tap_target_start())
         self.details_screen.add_widget(self.play_btn)
         self.details_screen.add_widget(MDRoundFlatButton(text='Download', pos_hint={'center_x':0.5, "center_y":0.1}, on_press=lambda x: self.download_bar()))
         
@@ -223,7 +225,7 @@ class MyApp(MDApp):
         self.root.ids.screen_manager.current = screen
     
     def cancel(self):
-        self.progress.color = 1, 0, 0, 1
+        self.download_progress.color = 1, 0, 0, 1
         self.status = False
         t3=threading.Thread(target=self.cancel2)
         t3.start()
@@ -240,19 +242,45 @@ class MyApp(MDApp):
         self.status=True
 
     def download_bar(self):
-        self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.8, value = 0, color = self.theme_cls.primary_color)
+        self.download_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.8, value = 0, color = self.theme_cls.primary_color)
         self.dia = MDDialog(title='Downloading', buttons=[MDFlatButton(text="CANCEL", text_color=self.theme_cls.primary_color, on_press=lambda x: self.cancel())])
         #self.dia.add_widget(IconLeftWidget(icon='download', pos_hint={'center_x': .1, 'center_y': .1}))
-        self.dia.add_widget(self.progress)
+        self.dia.add_widget(self.download_progress)
         #self.dia.add_widget(IconLeftWidget(icon='download', pos_hint={'center_x':0.2, 'center_y':0.5}))
         self.dia.open()
         t2 = threading.Thread(target=self.download_song)
         t2.start()
 
     def play_song_online(self):
-        self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.55}, size_hint_x = 0.5, value = 0, color = self.theme_cls.primary_color)
-        self.root.ids.PlayScreen.add_widget(self.progress)
-        
+        if self.sound:
+            #print("Sound found at %s" % self.sound.source)
+            #print("Sound is %.3f seconds" % self.sound.length)
+            self.sound.play()
+            lnth = self.sound.length
+            t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
+            t2.start()
+        else:
+            time.sleep(1)
+            self.play_song_online
+    
+    def online_play_bar(self, length):
+        count = 0
+        temp2 = MDLabel(text="{}".format(self.convert_sec(self.convert_sec(length)), halign="right", theme_text_color='Primary', pos_hint={"center_x":0.9, "center_y": .3}))
+        self.root.ids.SongDetailsScreen.add_widget(temp2)
+        while True:
+            temp = MDLabel(text="{}".format(self.convert_sec(self.sound.get_pos()), halign="left", theme_text_color='Primary', pos_hint={"center_x":0.1, "center_y": .3}))
+            #self.root.ids.SongDetailsScreen.add_widget(temp)
+            
+            self.play_progress.value = 100*(self.sound.get_pos())/length
+            #print(self.progress.value)
+            time.sleep(1)
+            self.root.ids.SongDetailsScreen.remove_widget(temp)
+            if self.play_progress.value > 1:
+                count +=1
+            if self.play_progress.value == 0 and count>1:
+                print('breaked loop')
+                break
+
     def play_song(self, song, artist, link):
         self.change_screen("PlayScreen", "left")
         self.sound = SoundLoader.load(link)
@@ -278,14 +306,17 @@ class MyApp(MDApp):
             print("Sound is %.3f seconds" % self.sound.length)
             self.sound.play()
         lnth = self.sound.length
-        t2 = threading.Thread(target=self.play_bar, args=(lnth,))
+        t2 = threading.Thread(target=self.offline_play_bar, args=(lnth,))
         t2.start()
 
     def convert_sec(self, lnth):
-        if int(lnth-(60*(lnth//60))) < 10:
-            return("{}:0{}".format(int(lnth//60), int(lnth-(60*(lnth//60)))))
-        else:
-            return("{}:{}".format(int(lnth//60), int(lnth-(60*(lnth//60)))))
+        try:
+            if int(lnth-(60*(lnth//60))) < 10:
+                return("{}:0{}".format(int(lnth//60), int(lnth-(60*(lnth//60)))))
+            else:
+                return("{}:{}".format(int(lnth//60), int(lnth-(60*(lnth//60)))))
+        except:
+            print('Error: Length is {}'.format(lnth))
 
     def play(self):
         if self.sound:
@@ -311,21 +342,20 @@ class MyApp(MDApp):
             self.change_screen(self.last_screen, 'right')
         self.root.ids.PlayScreen.remove_widget(self.title_play_label)
 
-    def play_bar(self, length):
+    def offline_play_bar(self, length):
         count = 0
         while True:
             temp = MDLabel(text="{}/{}".format(self.convert_sec(self.sound.get_pos()), self.convert_sec(length)), halign="right", theme_text_color='Primary', pos_hint={"top":1.05})
             self.root.ids.PlayScreen.add_widget(temp)
             self.progress.value = 100*(self.sound.get_pos())/length
             #print(self.progress.value)
-            time.sleep(1)
+            time.sleep(0.5)
             self.root.ids.PlayScreen.remove_widget(temp)
-            if self.progress.value == 0:
-                if count >0:
-                    print('breaked loop')
-                    break
-                else:
-                    count+=1
+            if self.progress.value > 1:
+                count +=1
+            if self.progress.value == 0 and count>1:
+                print('breaked loop')
+                break
         #self.dia.dismiss()
 
     def save_settings(self):
@@ -366,7 +396,7 @@ class MyApp(MDApp):
                 for chunk in r.iter_content(chunk_size=1024):
                     if self.status:
                         f.write(chunk)
-                        self.progress.value += 100/total
+                        self.download_progress.value += 100/total
                     else:
                         #print('Download cancelled')
                         break
