@@ -69,14 +69,14 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.user_data_path = 'data.json'#os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
         self.user_data = JsonStore(self.user_data_path)
         Window.bind(on_keyboard=self.events)
         if self.user_data.exists('download_path'):
             self.path = self.user_data.get('download_path')['path']
         else:
-            self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
+            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = os.path.join(self.user_data_dir, 'cache')
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -196,12 +196,12 @@ class MyApp(MDApp):
         
         song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(0.9,0.9), allow_stretch=True)
         self.details_screen.add_widget(song_image)
-        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":0.85}))
-        self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
+        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='left', padding_x=20, theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', pos_hint={"top":0.815}))
+        self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='left', padding_x=20, theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.775}))
         #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
-        self.heart_icon = MDIconButton(icon='heart-outline', pos_hint={"center_x":0.1, "center_y":0.2}, on_press=lambda x: self.add_fav())
+        self.heart_icon = MDIconButton(icon='heart-outline', pos_hint={"center_x":0.1, "center_y":0.15}, on_press=lambda x: self.add_fav())
         self.details_screen.add_widget(self.heart_icon)
-        self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.8, value = 0, color = self.theme_cls.primary_color)
+        self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.9, value = 0, color = self.theme_cls.primary_color)
         self.details_screen.add_widget(self.play_progress)
         #self.tap_target_view = MDTapTargetView(
         #    widget=self.play_btn,
@@ -211,13 +211,13 @@ class MyApp(MDApp):
         #)
         #self.details_screen.add_widget(MDIconButton(icon="stop", pos_hint={"center_x": .5, "center_y": .3}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.pause()))
         #self.details_screen.add_widget(MDIconButton(icon="play", pos_hint={"x": .5, "center_y": .5}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.play()))
-        self.details_screen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .2}, user_font_size="55sp", on_release=lambda x: self.rewind()))
-        self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .2}, user_font_size="55sp", on_release=lambda x: self.forward()))
+        self.details_screen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.rewind()))
+        self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.forward()))
         #self.details_screen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .7, "center_y": .2}, on_release=lambda x: self.increase()))
         #self.details_screen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .3, "center_y": .2}, on_release=lambda x: self.decrease()))
-        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.2}, user_font_size="50sp", md_bg_color=(1,1,1,1), on_press=lambda x: self.play_song_online())#self.tap_target_start())
+        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), on_press=lambda x: self.play_song_online())#self.tap_target_start())
         self.details_screen.add_widget(self.play_btn)
-        self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', pos_hint={'center_x':0.9, "center_y":0.2}, on_press=lambda x: self.download_bar()))
+        self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', pos_hint={'center_x':0.9, "center_y":0.15}, on_press=lambda x: self.download_bar()))
         
     def add_fav(self):
         print('passed')
