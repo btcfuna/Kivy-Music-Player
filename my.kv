@@ -1,5 +1,3 @@
-#:import MagicBehavior kivymd.uix.behaviors.MagicBehavior
-<MagicButton@MagicBehavior+MDRoundFlatButton>
 <Root@BoxLayout>
     orientation: 'vertical'
 
@@ -43,15 +41,14 @@ NavigationLayout:
                 pos_hint: {'center_x': 0.5, 'center_y': 0.7}
                 size_hint:(0.5,0.08)
             
-            MagicButton:
+            MDRoundFlatButton:
                 text: 'SEARCH'
                 id: search_btn
                 pos_hint: {'center_x':0.5, 'y':0.5}
                 text_color: app.theme_cls.primary_color
                 on_press:
-                    self.grow()
-                on_release:
                     app.show_data()
+                    
                     
             MDSpinner:
                 id: spinner
