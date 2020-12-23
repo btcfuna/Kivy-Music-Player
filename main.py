@@ -169,8 +169,8 @@ class MyApp(MDApp):
         self.genre = (self.song_data["language"]).capitalize()
         self.sound = SoundLoader.load(self.song_dwn_url)
         self.root.ids.SongDetailsScreen.add_widget(MDLabel(text=self.convert_sec(self.sound.length), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
-        
-        
+        self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.get_pos()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
+        self.root.ids.SongDetailsScreen.add_widget(self.play_stamp)
         print('finished fetching details')
         
 
@@ -285,13 +285,14 @@ class MyApp(MDApp):
     
     def online_play_bar(self, length):
         while True:
-            temp = (MDLabel(text=self.convert_sec(self.sound.get_pos()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
-            self.root.ids.SongDetailsScreen.add_widget(temp)
+            #temp = (MDLabel(text=self.convert_sec(self.sound.get_pos()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
+            #self.root.ids.SongDetailsScreen.add_widget(temp)
             
             self.play_progress.value = 100*(self.sound.get_pos())/length
             #print(self.progress.value)
             time.sleep(1)
-            self.root.ids.SongDetailsScreen.remove_widget(temp)
+            self.play_stamp.text = self.convert_sec(self.sound.get_pos())
+            #self.root.ids.SongDetailsScreen.remove_widget(temp)
             if self.sound.state == 'stop':
                 print('breaked loop')
                 break
