@@ -38,7 +38,7 @@ NavigationLayout:
                 hint_text: "Search"
                 helper_text: "Enter song name here"
                 helper_text_mode: "on_focus"
-                icon_right: "music-note"
+                icon_right: "music-note-outline"
                 icon_right_color: app.theme_cls.primary_color
                 pos_hint: {'center_x': 0.5, 'center_y': 0.7}
                 size_hint:(0.5,0.08)
@@ -228,7 +228,7 @@ NavigationLayout:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('DownloadsScreen', 'left')
                         IconLeftWidget:
-                            icon: 'folder-download'
+                            icon: 'folder-music'
                     
                     OneLineIconListItem:
                         text: 'Settings'
@@ -236,7 +236,7 @@ NavigationLayout:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('SettingsScreen', 'left')
                         IconLeftWidget:
-                            icon: 'settings'
+                            icon: 'cogs'
                             on_release:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('SettingsScreen', 'left')
@@ -247,7 +247,7 @@ NavigationLayout:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('AboutScreen', 'left')
                         IconLeftWidget:
-                            icon: 'help-rhombus'
+                            icon: 'information-outline'
                             on_release:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('AboutScreen', 'left')

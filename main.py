@@ -199,7 +199,8 @@ class MyApp(MDApp):
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":0.85}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
-        self.details_screen.add_widget(MDIconButton(icon='heart-outline', pos_hint={"center_x":0.1, "center_y":0.1}, on_press=lambda x: self.add_fav()))
+        self.heart_icon = MDIconButton(icon='heart-outline', pos_hint={"center_x":0.1, "center_y":0.2}, on_press=lambda x: self.add_fav())
+        self.details_screen.add_widget(self.heart_icon)
         self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.8, value = 0, color = self.theme_cls.primary_color)
         self.details_screen.add_widget(self.play_progress)
         #self.tap_target_view = MDTapTargetView(
@@ -210,16 +211,23 @@ class MyApp(MDApp):
         #)
         #self.details_screen.add_widget(MDIconButton(icon="stop", pos_hint={"center_x": .5, "center_y": .3}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.pause()))
         #self.details_screen.add_widget(MDIconButton(icon="play", pos_hint={"x": .5, "center_y": .5}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.play()))
-        self.details_screen.add_widget(MDIconButton(icon="rewind-10", pos_hint={"center_x": .4, "center_y": .2}, on_release=lambda x: self.rewind()))
-        self.details_screen.add_widget(MDIconButton(icon="fast-forward-10", pos_hint={"center_x": .6, "center_y": .2}, on_release=lambda x: self.forward()))
-        self.details_screen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .7, "center_y": .2}, on_release=lambda x: self.increase()))
-        self.details_screen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .3, "center_y": .2}, on_release=lambda x: self.decrease()))
-        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.2}, md_bg_color=(1,1,1,1), on_press=lambda x: self.play_song_online())#self.tap_target_start())
+        self.details_screen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .2}, user_font_size="55sp", on_release=lambda x: self.rewind()))
+        self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .2}, user_font_size="55sp", on_release=lambda x: self.forward()))
+        #self.details_screen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .7, "center_y": .2}, on_release=lambda x: self.increase()))
+        #self.details_screen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .3, "center_y": .2}, on_release=lambda x: self.decrease()))
+        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.2}, user_font_size="50sp", md_bg_color=(1,1,1,1), on_press=lambda x: self.play_song_online())#self.tap_target_start())
         self.details_screen.add_widget(self.play_btn)
-        self.details_screen.add_widget(MDRoundFlatButton(text='Download', pos_hint={'center_x':0.5, "center_y":0.1}, on_press=lambda x: self.download_bar()))
+        self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', pos_hint={'center_x':0.9, "center_y":0.2}, on_press=lambda x: self.download_bar()))
         
     def add_fav(self):
-        pass
+        print('passed')
+        if self.heart_icon.icon == 'heart-outline':
+            print('passed1_out')
+            self.heart_icon.icon = 'heart'
+
+        elif self.heart_icon.icon == 'heart':
+            print('passed1_fill')
+            self.heart_icon.icon = 'heart-outline'
 
     def change_screen(self, screen, direction):
         self.last_screen = self.root.ids.screen_manager.current
