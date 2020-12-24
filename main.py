@@ -7,6 +7,7 @@ from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFlatButton,
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.list import ImageLeftWidget, TwoLineIconListItem, MDList, IconLeftWidget, TwoLineAvatarListItem, OneLineAvatarListItem
+from kivymd.uix.card import MDCard
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.toast import toast
 from kivy.core.window import Window
@@ -196,10 +197,11 @@ class MyApp(MDApp):
         self.fetch_thread = threading.Thread(target=self.fetch_details)
         self.fetch_thread.start()
         self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
-        
-        song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(0.9,0.9), allow_stretch=True)
-        self.details_screen.add_widget(song_image)
-        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', pos_hint={"top":0.85}))
+        song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True)
+        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
+        card.add_widget(song_image)
+        self.details_screen.add_widget(card)
+        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', bold=True, pos_hint={"top":0.85}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
         self.heart_icon = MDIconButton(icon='heart-outline', user_font_size="30sp", pos_hint={"center_x":0.1, "center_y":0.15}, on_press=lambda x: self.add_fav())
@@ -218,17 +220,19 @@ class MyApp(MDApp):
         self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.forward()))
         #self.details_screen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .7, "center_y": .2}, on_release=lambda x: self.increase()))
         #self.details_screen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .3, "center_y": .2}, on_release=lambda x: self.decrease()))
-        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), on_press=lambda x: self.play_song_online())#self.tap_target_start())
+        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_online())#self.tap_target_start())
         self.details_screen.add_widget(self.play_btn)
         self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', user_font_size="30sp", pos_hint={'center_x':0.9, "center_y":0.15}, on_press=lambda x: self.download_bar()))
         
     def add_fav(self):
         if self.heart_icon.icon == 'heart-outline':
             self.heart_icon.icon = 'heart'
+            toast("Feature under development")
 
         elif self.heart_icon.icon == 'heart':
             #self.heart_icon.icon = 'heart-broken'
             self.heart_icon.icon = 'heart-outline'
+            toast("Removed from Favorites")
 
     def change_screen(self, screen, direction):
         self.last_screen = self.root.ids.screen_manager.current
