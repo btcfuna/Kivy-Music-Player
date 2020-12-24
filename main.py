@@ -72,14 +72,14 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.user_data_path = 'data.json'#os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
         self.user_data = JsonStore(self.user_data_path)
         Window.bind(on_keyboard=self.events)
         if self.user_data.exists('download_path'):
             self.path = self.user_data.get('download_path')['path']
         else:
-            self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
+            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = os.path.join(self.user_data_dir, 'cache')
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
