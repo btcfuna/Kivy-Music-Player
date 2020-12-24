@@ -41,14 +41,20 @@ NavigationLayout:
                 icon_right: "music-note-outline"
                 icon_right_color: app.theme_cls.primary_color
 
-            MDRoundFlatButton:
-                id: search_btn
-                text: 'Search'
+            MDCard:
+                size_hint: None, None
                 pos_hint: {'center_x':0.5, 'center_y':0.5}
-                md_bg_color: app.theme_cls.bg_light if app.theme_cls.theme_style == 'Dark' else (0,0,0,0)
-                text_color: app.theme_cls.primary_color
-                on_press:
-                    app.show_data()
+                size : 88,37
+                elevation: 10
+                radius:[3,]
+                border_radius:3
+                MDFlatButton:
+                    id: search_btn
+                    text: 'SEARCH'
+                    pos_hint: {'center_x':0.5, 'center_y':0.5}
+                    text_color: app.theme_cls.primary_color
+                    on_press:
+                        app.show_data()
                     
                     
             MDSpinner:
@@ -183,10 +189,12 @@ NavigationLayout:
         id: nav_drawer
         BoxLayout:
             orientation: 'vertical'
-            padding: "20dp"
+            padding: "10dp"
             spacing: "8dp"
+            
             AnchorLayout:
                 anchor_x: "left"
+                padding: "20dp"
                 size_hint_y: None
                 height: avatar.height
 
@@ -198,6 +206,7 @@ NavigationLayout:
 
             MDLabel:
                 text: "Black Hole"
+                padding_x: 20
                 font_style: "Button"
                 size_hint_y: None
                 height: self.texture_size[1]
@@ -205,6 +214,7 @@ NavigationLayout:
 
             MDLabel:
                 text: "xxxxxxxxxx@gmail.com"
+                padding_x: 20
                 font_style: "Caption"
                 size_hint_y: None
                 height: self.texture_size[1]

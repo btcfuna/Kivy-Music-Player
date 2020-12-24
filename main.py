@@ -300,7 +300,7 @@ class MyApp(MDApp):
                 break
 
     def play_song(self, link):
-        self.change_screen("PlayScreen", "up")
+        self.change_screen("PlayScreen", "left")
         self.sound = SoundLoader.load(link)
         if link.endswith('.m4a'):
             self.audio = MP4(link)
@@ -335,7 +335,7 @@ class MyApp(MDApp):
         song_image= Image(allow_stretch=True)
         song_image.texture= img
         self.root.ids.PlayScreen.clear_widgets()
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-down', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'down')))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'right')))
         card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
         card.add_widget(song_image)
         self.root.ids.PlayScreen.add_widget(card)
@@ -518,7 +518,7 @@ class MyApp(MDApp):
             if self.root.ids.screen_manager.current == 'SongDetailsScreen':
                 self.change_screen('SongListScreen', 'right')
             elif self.root.ids.screen_manager.current == 'PlayScreen':
-                self.change_screen('DownloadsScreen', 'down')
+                self.change_screen('DownloadsScreen', 'right')
             else:
                 self.change_screen('MainScreen', 'right')
         if keyboard == 13:
