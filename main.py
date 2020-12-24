@@ -1,5 +1,6 @@
 from logging import root
 from kivy import animation
+from kivy.core import audio
 from kivy.uix.image import Image, AsyncImage, CoreImage
 from kivymd.app import MDApp
 from kivymd.uix.label import MDLabel, MDIcon
@@ -30,6 +31,9 @@ import time
 import webbrowser
 from pyDes import *
 from mutagen.mp4 import MP4, MP4Cover
+from mutagen.mp3 import MP3
+from mutagen.id3 import ID3
+from mutagen.easyid3 import EasyID3
 
 
 if platform == 'android':
@@ -293,24 +297,45 @@ class MyApp(MDApp):
     def play_song(self, link):
         self.change_screen("PlayScreen", "left")
         self.sound = SoundLoader.load(link)
-        audio = MP4(link)
-        play_song_name = audio['\xa9nam'][0]
-        #print(audio['\xa9alb'])
-        play_art_name = audio['\xa9ART'][0]
-        #print(audio['\xa9day'])
-        #print(audio['\xa9gen'])
-        img_data = audio["covr"][0]
-        play_image_data = io.BytesIO(img_data)
+        if link.endswith('.m4a'):
+            self.audio = MP4(link)
+            self.play_song_name = self.audio.get('\xa9nam', ['Unknown'])[0]
+            #print(audio['\xa9alb'])
+            self.play_art_name = self.audio.get('\xa9ART',['Unknown'])[0]
+            #print(audio['\xa9day'])
+            #print(audio['\xa9gen'])
+            try:
+                self.img_data = self.audio["covr"][0]
+            except:
+                with open('cover.jpg', 'rb') as f:
+                    self.img_data = f.read()
+        elif link.endswith('.mp3'):
+            self.audio = MP3(link, ID3=EasyID3)
+            self.audio_tags = ID3(link)
+            self.play_song_name = self.audio.get('title', ['Unknown'])[0]
+            self.play_art_name = self.audio.get('artist',['Unknown'])[0]
+            try:
+                self.img_data = self.audio_tags.get("APIC:").data
+            except:
+                with open('cover.jpg', 'rb') as f:
+                    self.img_data = f.read()
+        else:
+            with open('cover.jpg', 'rb') as f:
+                self.img_data = f.read()
+                self.play_song_name = 'Unknown'
+                self.play_art_name = 'Unknown'
+        
+        play_image_data = io.BytesIO(self.img_data)
+        img=CoreImage(play_image_data, ext="jpg").texture
+        song_image= Image(allow_stretch=True)
+        song_image.texture= img
         self.root.ids.PlayScreen.clear_widgets()
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'right')))
-        img=CoreImage(play_image_data, ext="jpg").texture
-        song_image= Image()
-        song_image.texture= img
         card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
         card.add_widget(song_image)
         self.root.ids.PlayScreen.add_widget(card)
-        self.root.ids.PlayScreen.add_widget(MDLabel(text=play_song_name, halign='center', theme_text_color='Primary', font_style='H4', bold=True, pos_hint={"top":0.85}))
-        self.root.ids.PlayScreen.add_widget(MDLabel(text=play_art_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
+        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_song_name, halign='center', theme_text_color='Primary', font_style='H4', bold=True, pos_hint={"top":0.85}))
+        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_art_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.9, value = 0, color = self.theme_cls.primary_color)
         self.root.ids.PlayScreen.add_widget(self.play_progress)
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.rewind()))
@@ -329,7 +354,7 @@ class MyApp(MDApp):
             #print("Sound found at %s" % self.sound.source)
             #print("Sound is %.3f seconds" % self.sound.length)
             if self.sound.state == 'stop':
-                self.play_btn.icon = 'stop'
+                self.play_btn.icon = 'pause'
                 self.sound.play()
                 lnth = self.sound.length
                 t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
@@ -363,16 +388,16 @@ class MyApp(MDApp):
         if self.sound.get_pos() >= 5:
             self.sound.seek(self.sound.get_pos() - 10)
     def increase(self):
-        self.sound.volume += 0.1
+        self.sound.volume += 0.2
     def decrease(self):
-        self.sound.volume -= 0.1
-    def stop_song(self):
-        self.sound.stop()
-        if self.last_screen == 'DownloadsScreen':
-            self.change_screen('DownloadsScreen', 'right')
-        else:
-            self.change_screen(self.last_screen, 'right')
-        self.root.ids.PlayScreen.remove_widget(self.title_play_label)
+        self.sound.volume -= 0.2
+    #def stop_song(self):
+    #    self.sound.stop()
+    #    if self.last_screen == 'DownloadsScreen':
+    #        self.change_screen('DownloadsScreen', 'right')
+    #    else:
+    #        self.change_screen(self.last_screen, 'right')
+    #    self.root.ids.PlayScreen.remove_widget(self.title_play_label)
 
     def save_settings(self):
         toast("Settings saved")
@@ -476,7 +501,7 @@ class MyApp(MDApp):
             if self.root.ids.screen_manager.current == 'SongDetailsScreen':
                 self.change_screen('SongListScreen', 'right')
             elif self.root.ids.screen_manager.current == 'PlayScreen':
-                self.stop_song()
+                self.change_screen('DownloadsScreen', 'right')
             else:
                 self.change_screen('MainScreen', 'right')
         if keyboard == 13:
