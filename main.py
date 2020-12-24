@@ -1,6 +1,6 @@
 from logging import root
 from kivy import animation
-from kivy.uix.image import Image, AsyncImage
+from kivy.uix.image import Image, AsyncImage, CoreImage
 from kivymd.app import MDApp
 from kivymd.uix.label import MDLabel, MDIcon
 from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFlatButton, MDRectangleFlatIconButton, MDRoundFlatButton, MDFloatingActionButton
@@ -24,6 +24,7 @@ import requests
 import base64
 import json
 import os
+import io
 import shutil
 import time
 import webbrowser
@@ -45,9 +46,6 @@ class MyApp(MDApp):
     status = True
     last_screen = 'MainScreen'
     def build(self):
-        #self.theme_cls = ThemeManager()
-        
-        #store.delete('tito')
         if self.user_data.exists('theme'):
             self.theme_cls.theme_style = self.user_data.get('theme')['mode']
         else:
@@ -59,7 +57,7 @@ class MyApp(MDApp):
         #self.theme_cls.primary_hue = "A400"
         self.theme_cls.accent_palette = self.theme_cls.primary_palette#'Blue'
         #self.theme_cls.bg_darkest
-        Loader.loading_image = 'cover.jpg'#'giphy.gif'
+        Loader.loading_image = 'cover.jpg'
         #return Builder.load_string(main)
 
     def tap_target_start(self):
@@ -116,7 +114,7 @@ class MyApp(MDApp):
             self.add_down_song(items)
     
     def add_down_song(self, item):
-        lst = OneLineAvatarListItem(text=item.strip('.m4a'), on_press=lambda x: self.play_song(item.split('-')[0], '-'.join(item.split('-')[1:]).strip('.m4a'),os.path.join(self.path, item)))
+        lst = OneLineAvatarListItem(text=item, on_press=lambda x: self.play_song(os.path.join(self.path, item)))
         lst.add_widget(IconLeftWidget(icon='music'))
         self.down_list.add_widget(lst)
 
@@ -214,12 +212,8 @@ class MyApp(MDApp):
         #    description_text="This feature is currently under development",
         #    widget_position="right_top",
         #)
-        #self.details_screen.add_widget(MDIconButton(icon="stop", pos_hint={"center_x": .5, "center_y": .3}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.pause()))
-        #self.details_screen.add_widget(MDIconButton(icon="play", pos_hint={"x": .5, "center_y": .5}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.play()))
         self.details_screen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.rewind()))
         self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.forward()))
-        #self.details_screen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .7, "center_y": .2}, on_release=lambda x: self.increase()))
-        #self.details_screen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .3, "center_y": .2}, on_release=lambda x: self.decrease()))
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_online())#self.tap_target_start())
         self.details_screen.add_widget(self.play_btn)
         self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', user_font_size="30sp", pos_hint={'center_x':0.9, "center_y":0.15}, on_press=lambda x: self.download_bar()))
@@ -264,7 +258,6 @@ class MyApp(MDApp):
         self.dia = MDDialog(title='Downloading', buttons=[MDFlatButton(text="CANCEL", text_color=self.theme_cls.primary_color, on_press=lambda x: self.cancel())])
         #self.dia.add_widget(IconLeftWidget(icon='download', pos_hint={'center_x': .1, 'center_y': .1}))
         self.dia.add_widget(self.download_progress)
-        #self.dia.add_widget(IconLeftWidget(icon='download', pos_hint={'center_x':0.2, 'center_y':0.5}))
         self.dia.open()
         t2 = threading.Thread(target=self.download_song)
         t2.start()
@@ -289,47 +282,64 @@ class MyApp(MDApp):
     
     def online_play_bar(self, length):
         while True:
-            #temp = (MDLabel(text=self.convert_sec(self.sound.get_pos()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
-            #self.root.ids.SongDetailsScreen.add_widget(temp)
-            
             self.play_progress.value = 100*(self.sound.get_pos())/length
             #print(self.progress.value)
             time.sleep(1)
             self.play_stamp.text = self.convert_sec(self.sound.get_pos())
-            #self.root.ids.SongDetailsScreen.remove_widget(temp)
             if self.sound.state == 'stop':
                 print('breaked loop')
                 break
 
-    def play_song(self, song, artist, link):
+    def play_song(self, link):
         self.change_screen("PlayScreen", "left")
         self.sound = SoundLoader.load(link)
+        audio = MP4(link)
+        play_song_name = audio['\xa9nam'][0]
+        #print(audio['\xa9alb'])
+        play_art_name = audio['\xa9ART'][0]
+        #print(audio['\xa9day'])
+        #print(audio['\xa9gen'])
+        img_data = audio["covr"][0]
+        play_image_data = io.BytesIO(img_data)
         self.root.ids.PlayScreen.clear_widgets()
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.1, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'right')))
-        #close_btn = MDFlatButton(text="Close", on_release=lambda x: self.stop_song())
-        #self.dia = MDDialog(title="Playing", text = "Feature under development!", size_hint=(0.7,1), buttons=[close_btn])
-        self.title_play_label = (MDLabel(text=song+' - '+artist, halign='center', theme_text_color='Primary', font_style='H4', pos_hint={"top":1.1}))
-        self.root.ids.PlayScreen.add_widget(self.title_play_label)
-        self.progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.55}, size_hint_x = 0.5, value = 0, color = self.theme_cls.primary_color)
-        self.root.ids.PlayScreen.add_widget(self.progress)
-        #self.dia.add_widget(self.progress)
-        
-        #self.root.ids.PlayScreen.add_widget(MDIconButton(icon="pause", pos_hint={"x": .5, "center_y": .5}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.pause()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="stop", pos_hint={"center_x": .5, "center_y": .5}, theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=lambda x: self.stop_song()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="rewind-10", pos_hint={"center_x": .4, "center_y": .5}, on_release=lambda x: self.rewind()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="fast-forward-10", pos_hint={"center_x": .6, "center_y": .5}, on_release=lambda x: self.forward()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .7, "center_y": .5}, on_release=lambda x: self.increase()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .3, "center_y": .5}, on_release=lambda x: self.decrease()))
-        #self.dia.open()
-        #print(self.song_dwn_url)
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'right')))
+        img=CoreImage(play_image_data, ext="jpg").texture
+        song_image= Image()
+        song_image.texture= img
+        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
+        card.add_widget(song_image)
+        self.root.ids.PlayScreen.add_widget(card)
+        self.root.ids.PlayScreen.add_widget(MDLabel(text=play_song_name, halign='center', theme_text_color='Primary', font_style='H4', bold=True, pos_hint={"top":0.85}))
+        self.root.ids.PlayScreen.add_widget(MDLabel(text=play_art_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
+        self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.9, value = 0, color = self.theme_cls.primary_color)
+        self.root.ids.PlayScreen.add_widget(self.play_progress)
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.rewind()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.forward()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .85, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.increase()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .15, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.decrease()))
+        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_offline())
+        self.root.ids.PlayScreen.add_widget(self.play_btn)
+        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.convert_sec(self.sound.length), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
+        self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.get_pos()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
+        self.root.ids.PlayScreen.add_widget(self.play_stamp)
 
+            
+    def play_song_offline(self):
         if self.sound:
             #print("Sound found at %s" % self.sound.source)
-            print("Sound is %.3f seconds" % self.sound.length)
-            self.sound.play()
-        lnth = self.sound.length
-        t2 = threading.Thread(target=self.offline_play_bar, args=(lnth,))
-        t2.start()
+            #print("Sound is %.3f seconds" % self.sound.length)
+            if self.sound.state == 'stop':
+                self.play_btn.icon = 'stop'
+                self.sound.play()
+                lnth = self.sound.length
+                t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
+                t2.start()
+            elif self.sound.state == 'play':
+                self.play_btn.icon = 'play'
+                self.sound.stop()
+        else:
+            time.sleep(0.5)
+            self.play_song_offline
 
     def convert_sec(self, lnth):
         try:
@@ -363,19 +373,6 @@ class MyApp(MDApp):
         else:
             self.change_screen(self.last_screen, 'right')
         self.root.ids.PlayScreen.remove_widget(self.title_play_label)
-
-    def offline_play_bar(self, length):
-        while True:
-            temp = MDLabel(text="{}/{}".format(self.convert_sec(self.sound.get_pos()), self.convert_sec(length)), halign="right", theme_text_color='Primary', pos_hint={"top":1.05})
-            self.root.ids.PlayScreen.add_widget(temp)
-            self.progress.value = 100*(self.sound.get_pos())/length
-            #print(self.progress.value)
-            time.sleep(0.5)
-            self.root.ids.PlayScreen.remove_widget(temp)
-            if self.sound.state == 'stop':
-                print('breaked loop')
-                break
-        #self.dia.dismiss()
 
     def save_settings(self):
         toast("Settings saved")
