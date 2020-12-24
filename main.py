@@ -4,7 +4,7 @@ from kivy.core import audio
 from kivy.uix.image import Image, AsyncImage, CoreImage
 from kivymd.app import MDApp
 from kivymd.uix.label import MDLabel, MDIcon
-from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFlatButton, MDRectangleFlatIconButton, MDRoundFlatButton, MDFloatingActionButton
+from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFlatButton, MDRectangleFlatIconButton, MDRoundFlatButton, MDFloatingActionButton, MDRaisedButton
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.list import ImageLeftWidget, TwoLineIconListItem, MDList, IconLeftWidget, TwoLineAvatarListItem, OneLineAvatarListItem
@@ -35,7 +35,6 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import ID3
 from mutagen.easyid3 import EasyID3
 
-
 if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission, check_permission
@@ -44,6 +43,7 @@ if platform == 'android':
 
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
+
 
 class MyApp(MDApp):
     title = "Black Hole"
@@ -59,7 +59,7 @@ class MyApp(MDApp):
         if self.theme_cls.theme_style == "Dark":
             self.root.ids.dark_mode_switch.active = True
         #self.theme_cls.primary_hue = "A400"
-        self.theme_cls.accent_palette = self.theme_cls.primary_palette#'Blue'
+        self.theme_cls.accent_palette = self.theme_cls.primary_palette
         #self.theme_cls.bg_darkest
         Loader.loading_image = 'cover.jpg'
         #return Builder.load_string(main)
@@ -72,14 +72,14 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = 'data.json'#os.path.join(self.user_data_dir, 'data.json')
         self.user_data = JsonStore(self.user_data_path)
         Window.bind(on_keyboard=self.events)
         if self.user_data.exists('download_path'):
             self.path = self.user_data.get('download_path')['path']
         else:
-            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = os.path.join(self.user_data_dir, 'cache')
+            self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -134,8 +134,8 @@ class MyApp(MDApp):
             t1.start()
 
     def show_list(self):
-        self.dia.open()
         self.change_screen('SongListScreen', 'left')
+        self.dia.open()
         self.list_view = self.root.ids.container
         self.list_view.clear_widgets()
         self.search_data = json.loads(requests.get(search_base_url+self.root.ids.song_name.text).text.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
@@ -210,12 +210,12 @@ class MyApp(MDApp):
         self.details_screen.add_widget(self.heart_icon)
         self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.9, value = 0, color = self.theme_cls.primary_color)
         self.details_screen.add_widget(self.play_progress)
-        #self.tap_target_view = MDTapTargetView(
-        #    widget=self.play_btn,
-        #    title_text="Listen to songs online",
-        #    description_text="This feature is currently under development",
-        #    widget_position="right_top",
-        #)
+        self.tap_target_view = MDTapTargetView(
+            widget=self.heart_icon,
+            title_text="Add to Favorites",
+            description_text="Feature currently under development",
+            widget_position="left_bottom",
+        )
         self.details_screen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.rewind()))
         self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.forward()))
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_online())#self.tap_target_start())
@@ -225,11 +225,16 @@ class MyApp(MDApp):
     def add_fav(self):
         if self.heart_icon.icon == 'heart-outline':
             self.heart_icon.icon = 'heart'
-            toast("Feature under development")
+            self.heart_icon.theme_text_color = "Custom"
+            self.heart_icon.text_color = (1,0,0,1)
+            self.tap_target_view.start()
+            #toast("Feature under development")
 
         elif self.heart_icon.icon == 'heart':
             #self.heart_icon.icon = 'heart-broken'
             self.heart_icon.icon = 'heart-outline'
+            self.heart_icon.theme_text_color = "Custom"
+            self.heart_icon.text_color = self.theme_cls.text_color
             toast("Removed from Favorites")
 
     def change_screen(self, screen, direction):
@@ -295,7 +300,7 @@ class MyApp(MDApp):
                 break
 
     def play_song(self, link):
-        self.change_screen("PlayScreen", "left")
+        self.change_screen("PlayScreen", "up")
         self.sound = SoundLoader.load(link)
         if link.endswith('.m4a'):
             self.audio = MP4(link)
@@ -330,7 +335,7 @@ class MyApp(MDApp):
         song_image= Image(allow_stretch=True)
         song_image.texture= img
         self.root.ids.PlayScreen.clear_widgets()
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'right')))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-down', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'down')))
         card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
         card.add_widget(song_image)
         self.root.ids.PlayScreen.add_widget(card)
@@ -475,6 +480,18 @@ class MyApp(MDApp):
         self.dia.open()
         #toast("Song Downloaded Successfully!")
 
+    def set_nav_color(self, item):
+        for child in self.root.ids.nav_list.children:
+            print(child.text)
+            #if child.text_color == self.theme_cls.primary_color:
+            #    child.text_color = self.theme_cls.text_color
+            #    break
+            if child.text == item:
+                child.text_color = self.theme_cls.primary_color
+                break
+                
+        
+
     def file_manager_open(self):
         self.file_manager.show(self.path)  # output manager to the screen
         self.manager_open = True
@@ -501,7 +518,7 @@ class MyApp(MDApp):
             if self.root.ids.screen_manager.current == 'SongDetailsScreen':
                 self.change_screen('SongListScreen', 'right')
             elif self.root.ids.screen_manager.current == 'PlayScreen':
-                self.change_screen('DownloadsScreen', 'right')
+                self.change_screen('DownloadsScreen', 'down')
             else:
                 self.change_screen('MainScreen', 'right')
         if keyboard == 13:

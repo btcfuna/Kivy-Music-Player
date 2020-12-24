@@ -35,16 +35,17 @@ NavigationLayout:
                 id: song_name
                 hint_text: "Search"
                 helper_text: "Enter song name here"
+                pos_hint: {'center_x': 0.5, 'center_y': 0.7}
+                size_hint_x: 0.5
                 helper_text_mode: "on_focus"
                 icon_right: "music-note-outline"
                 icon_right_color: app.theme_cls.primary_color
-                pos_hint: {'center_x': 0.5, 'center_y': 0.7}
-                size_hint:(0.5,0.08)
-            
+
             MDRoundFlatButton:
-                text: 'SEARCH'
                 id: search_btn
-                pos_hint: {'center_x':0.5, 'y':0.5}
+                text: 'Search'
+                pos_hint: {'center_x':0.5, 'center_y':0.5}
+                md_bg_color: app.theme_cls.bg_light if app.theme_cls.theme_style == 'Dark' else (0,0,0,0)
                 text_color: app.theme_cls.primary_color
                 on_press:
                     app.show_data()
@@ -167,7 +168,8 @@ NavigationLayout:
                     
                 FloatLayout:
                     MDLabel:
-                        text: "     Dark Mode"
+                        text: "Dark Mode"
+                        padding_x: 30
                         theme_text_color: 'Primary'
                         pos_hint: {'center_y': .5}
                     MDSwitch:
@@ -175,76 +177,102 @@ NavigationLayout:
                         active: False
                         pos_hint: {'center_x': .8, 'center_y': .5}
                         on_active: app.change_theme()
-                MDRoundFlatButton:
-                    text: 'Save'
-                    pos_hint: {'center_x':0.5, 'center_y':0.5}
-                    text_color: app.theme_cls.primary_color
-                    on_press:
-                        app.save_settings()
-                        app.change_screen('MainScreen', 'right')
-                
                 Widget:
 
     MDNavigationDrawer:
         id: nav_drawer
         BoxLayout:
             orientation: 'vertical'
-            padding: "10dp"
+            padding: "20dp"
             spacing: "8dp"
-            
             AnchorLayout:
                 anchor_x: "left"
+                size_hint_y: None
+                height: avatar.height
 
                 Image:
                     id: avatar
-                    source: "./bh-circle_cropped.png"
+                    size_hint: None, None
+                    size: "56dp", "56dp"
+                    source: "icon-black.png"
+
+            MDLabel:
+                text: "Black Hole"
+                font_style: "Button"
+                size_hint_y: None
+                height: self.texture_size[1]
+                theme_text_color: 'Primary'
+
+            MDLabel:
+                text: "xxxxxxxxxx@gmail.com"
+                font_style: "Caption"
+                size_hint_y: None
+                height: self.texture_size[1]
+                theme_text_color: 'Secondary'
 
             ScrollView:
                 MDList:
+                    id: nav_list
                     OneLineIconListItem:
                         text: 'Home'
                         pos_hint: {'center_x': 0.5, 'center_y': 0.5}
                         theme_text_color: "Custom"
-                        text_color: app.theme_cls.primary_color
-                        on_release:
+                        text_color: app.theme_cls.primary_color if screen_manager.current == 'MainScreen' else app.theme_cls.text_color
+                        on_press:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('MainScreen', 'right')
                         IconLeftWidget:
                             icon: 'home-outline'
                             theme_text_color: "Custom"
-                            text_color: app.theme_cls.primary_color
-                            on_release:
+                            text_color: app.theme_cls.primary_color if screen_manager.current == 'MainScreen' else app.theme_cls.text_color
+                            on_press:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('MainScreen', 'right')
                         
                         
                     OneLineIconListItem:
                         text: 'Downloads'
-                        on_release:
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color if screen_manager.current == 'DownloadsScreen' else app.theme_cls.text_color
+                        on_press:
                             app.download_list()
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('DownloadsScreen', 'left')
                         IconLeftWidget:
                             icon: 'folder-outline'
+                            theme_text_color: "Custom"
+                            text_color: app.theme_cls.primary_color if screen_manager.current == 'DownloadsScreen' else app.theme_cls.text_color
+                            on_press:
+                                app.download_list()
+                                nav_drawer.toggle_nav_drawer()
+                                app.change_screen('DownloadsScreen', 'left')
                     
                     OneLineIconListItem:
                         text: 'Settings'
-                        on_release:
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color if screen_manager.current == 'SettingsScreen' else app.theme_cls.text_color
+                        on_press:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('SettingsScreen', 'left')
                         IconLeftWidget:
                             icon: 'cogs'
-                            on_release:
+                            theme_text_color: "Custom"
+                            text_color: app.theme_cls.primary_color if screen_manager.current == 'SettingsScreen' else app.theme_cls.text_color
+                            on_press:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('SettingsScreen', 'left')
 
                     OneLineIconListItem:
                         text: 'About'
-                        on_release:
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color if screen_manager.current == 'AboutScreen' else app.theme_cls.text_color
+                        on_press:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('AboutScreen', 'left')
                         IconLeftWidget:
                             icon: 'information-outline'
-                            on_release:
+                            theme_text_color: "Custom"
+                            text_color: app.theme_cls.primary_color if screen_manager.current == 'AboutScreen' else app.theme_cls.text_color
+                            on_press:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('AboutScreen', 'left')
