@@ -177,7 +177,7 @@ NavigationLayout:
         id: nav_drawer
         BoxLayout:
             orientation: 'vertical'
-            padding: "10dp"
+            padding: ("10dp","20dp")
             spacing: "8dp"
             
             AnchorLayout:
@@ -216,14 +216,14 @@ NavigationLayout:
                         pos_hint: {'center_x': 0.5, 'center_y': 0.5}
                         theme_text_color: "Custom"
                         text_color: app.theme_cls.primary_color if screen_manager.current == 'MainScreen' else app.theme_cls.text_color
-                        on_press:
+                        on_release:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('MainScreen', 'right')
                         IconLeftWidget:
                             icon: 'home-outline'
                             theme_text_color: "Custom"
                             text_color: app.theme_cls.primary_color if screen_manager.current == 'MainScreen' else app.theme_cls.text_color
-                            on_press:
+                            on_release:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('MainScreen', 'right')
                         
@@ -232,7 +232,7 @@ NavigationLayout:
                         text: 'Downloads'
                         theme_text_color: "Custom"
                         text_color: app.theme_cls.primary_color if screen_manager.current == 'DownloadsScreen' else app.theme_cls.text_color
-                        on_press:
+                        on_release:
                             app.download_list()
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('DownloadsScreen', 'left')
@@ -240,7 +240,7 @@ NavigationLayout:
                             icon: 'folder-outline'
                             theme_text_color: "Custom"
                             text_color: app.theme_cls.primary_color if screen_manager.current == 'DownloadsScreen' else app.theme_cls.text_color
-                            on_press:
+                            on_release:
                                 app.download_list()
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('DownloadsScreen', 'left')
@@ -249,14 +249,14 @@ NavigationLayout:
                         text: 'Settings'
                         theme_text_color: "Custom"
                         text_color: app.theme_cls.primary_color if screen_manager.current == 'SettingsScreen' else app.theme_cls.text_color
-                        on_press:
+                        on_release:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('SettingsScreen', 'left')
                         IconLeftWidget:
                             icon: 'cogs'
                             theme_text_color: "Custom"
                             text_color: app.theme_cls.primary_color if screen_manager.current == 'SettingsScreen' else app.theme_cls.text_color
-                            on_press:
+                            on_release:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('SettingsScreen', 'left')
 
@@ -264,13 +264,13 @@ NavigationLayout:
                         text: 'About'
                         theme_text_color: "Custom"
                         text_color: app.theme_cls.primary_color if screen_manager.current == 'AboutScreen' else app.theme_cls.text_color
-                        on_press:
+                        on_release:
                             nav_drawer.toggle_nav_drawer()
                             app.change_screen('AboutScreen', 'left')
                         IconLeftWidget:
                             icon: 'information-outline'
                             theme_text_color: "Custom"
                             text_color: app.theme_cls.primary_color if screen_manager.current == 'AboutScreen' else app.theme_cls.text_color
-                            on_press:
+                            on_release:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('AboutScreen', 'left')
