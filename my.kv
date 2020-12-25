@@ -30,12 +30,17 @@ NavigationLayout:
                     
                     
                 Widget:
-            
+            MDIconButton:
+                icon: 'cloud-search'
+                pos_hint: {"center_x":0.5, "center_y":0.75}
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.primary_color
+                user_font_size: "150sp" 
             MDTextFieldRound:
                 id: song_name
                 hint_text: "Songs, artists or podcasts"
                 helper_text: "Enter song name here"
-                pos_hint: {'center_x': 0.5, 'center_y': 0.6}
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
                 size_hint: 0.5, 0.05
                 line_color: app.theme_cls.bg_light if app.theme_cls.theme_style == 'Dark' else app.theme_cls.bg_darkest
                 normal_color: app.theme_cls.bg_light if app.theme_cls.theme_style == 'Dark' else app.theme_cls.bg_darkest
@@ -48,7 +53,7 @@ NavigationLayout:
 
             MDCard:
                 size_hint: None, None
-                pos_hint: {'center_x':0.5, 'center_y':0.5}
+                pos_hint: {'center_x':0.5, 'center_y':0.4}
                 size : search_btn.size
                 elevation: 10
                 radius:[3,]
