@@ -15,10 +15,6 @@ NavigationLayout:
 
             BoxLayout:
                 orientation: 'vertical'
-                MDIconButton:
-                    icon: 'menu'
-                    pos_hint: {"center_x":0.05, "center_y":0.95}
-                    on_press: nav_drawer.toggle_nav_drawer()
                 MDBottomAppBar:
                     MDToolbar:
                         elevation: 10
@@ -34,20 +30,24 @@ NavigationLayout:
                 pos_hint: {"center_x":0.5, "center_y":0.75}
                 theme_text_color: "Custom"
                 text_color: app.theme_cls.primary_color
-                user_font_size: "200sp"
+                user_font_size: "300sp"
+            MDIconButton:
+                icon: 'menu'
+                pos_hint: {"center_x":0.05, "center_y":0.95}
+                on_press: nav_drawer.toggle_nav_drawer()
             MDCard:
                 size_hint: None, None
                 pos_hint: {'center_x':0.5, 'center_y':0.5}
-                size_hint: 0.54,0.06
+                size_hint: 0.7,0.06
                 elevation: 8
-                radius:[10,]
-                border_radius:10
+                radius: [20,]
+                border_radius: 20
             MDTextFieldRound:
                 id: song_name
                 hint_text: "Songs, artists or podcasts"
                 helper_text: "Enter song name here"
                 pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-                size_hint: 0.5, 0.05
+                size_hint: 0.6, 0.05
                 line_color: app.theme_cls.bg_light
                 normal_color: app.theme_cls.bg_light
                 color_active: app.theme_cls.bg_light
