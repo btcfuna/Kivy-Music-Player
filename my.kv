@@ -40,8 +40,8 @@ NavigationLayout:
                 pos_hint: {'center_x':0.5, 'center_y':0.5}
                 size_hint: 0.7,0.06
                 elevation: 8
-                radius: [20,]
-                border_radius: 20
+                radius: [10,]
+                border_radius: 10
             MDTextFieldRound:
                 id: song_name
                 hint_text: "Songs, artists or podcasts"
@@ -135,12 +135,18 @@ NavigationLayout:
                 Image:
                     source: './made-black.png' if app.theme_cls.theme_style == "Light" else './made-white.png'
 
-                MDRoundFlatButton:
-                    text: 'Contact us'
-                    pos_hint: {'center_x':0.5}
-                    text_color: app.theme_cls.primary_color
-                    on_press:
-                        app.contact_us()
+                MDCard:
+                    size_hint: None, None
+                    pos_hint: {'center_x':0.5, 'center_y':0.4}
+                    size : contact_btn.size
+                    elevation: 5
+                    MDRectangleFlatButton:
+                        id: contact_btn
+                        text: 'Contact'
+                        pos_hint: {'center_x':0.5, 'center_y':0.5}
+                        text_color: app.theme_cls.primary_color
+                        on_press:
+                            app.contact_us()
 
         Screen:
             id: SettingsScreen
