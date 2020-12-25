@@ -109,30 +109,6 @@ NavigationLayout:
             name: 'PlayScreen'
             BoxLayout:
                 orientation: 'vertical'
-            
-            MDIconButton:
-                icon: "stop"
-                pos_hint:{"center_x": .5, "center_y": .5}
-                theme_text_color:"Custom"
-                text_color:self.theme_cls.primary_color
-                on_release: app.stop_song()
-
-            MDIconButton:
-                icon: "rewind-10"
-                pos_hint:{"center_x": .4, "center_y": .5}
-                on_release: app.rewind()
-            MDIconButton:
-                icon:"fast-forward-10"
-                pos_hint:{"center_x": .6, "center_y": .5}
-                on_release: app.forward()
-            MDIconButton:
-                icon:"volume-plus"
-                pos_hint:{"center_x": .7, "center_y": .5}
-                on_release: app.increase()
-            MDIconButton:
-                icon:"volume-minus"
-                pos_hint:{"center_x": .3, "center_y": .5}
-                on_release: app.decrease()
 
         Screen:
             id: AboutScreen
@@ -175,14 +151,26 @@ NavigationLayout:
                 FloatLayout:
                     MDLabel:
                         text: "Dark Mode"
-                        padding_x: 30
+                        padding_x: "30dp"
                         theme_text_color: 'Primary'
-                        pos_hint: {'center_y': .5}
+                        pos_hint: {'center_y': .7}
                     MDSwitch:
                         id: dark_mode_switch
                         active: False
-                        pos_hint: {'center_x': .8, 'center_y': .5}
+                        pos_hint: {'center_x': 0.9, 'center_y': .7}
                         on_active: app.change_theme()
+                
+                    MDLabel:
+                        text: "Current version"
+                        padding_x: "30dp"
+                        theme_text_color: 'Primary'
+                        pos_hint: {'center_y': .3}
+                    MDLabel:
+                        text: "beta 0.6"
+                        padding_x: "30dp"
+                        theme_text_color: 'Secondary'
+                        halign: 'right'
+                        pos_hint: {'center_y': .3}
                 Widget:
 
     MDNavigationDrawer:
@@ -206,7 +194,7 @@ NavigationLayout:
 
             MDLabel:
                 text: "Black Hole"
-                padding_x: 20
+                padding_x: "20dp"
                 font_style: "Button"
                 size_hint_y: None
                 height: self.texture_size[1]
@@ -214,7 +202,7 @@ NavigationLayout:
 
             MDLabel:
                 text: "xxxxxxxxxx@gmail.com"
-                padding_x: 20
+                padding_x: "20dp"
                 font_style: "Caption"
                 size_hint_y: None
                 height: self.texture_size[1]

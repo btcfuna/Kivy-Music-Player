@@ -206,7 +206,7 @@ class MyApp(MDApp):
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', bold=True, pos_hint={"top":0.85}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
-        self.heart_icon = MDIconButton(icon='heart-outline', user_font_size="30sp", pos_hint={"center_x":0.1, "center_y":0.15}, on_press=lambda x: self.add_fav())
+        self.heart_icon = MDIconButton(icon='heart-outline', user_font_size="30sp", theme_text_color= 'Secondary', pos_hint={"center_x":0.1, "center_y":0.15}, on_press=lambda x: self.add_fav())
         self.details_screen.add_widget(self.heart_icon)
         self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.9, value = 0, color = self.theme_cls.primary_color)
         self.details_screen.add_widget(self.play_progress)
@@ -220,7 +220,7 @@ class MyApp(MDApp):
         self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.forward()))
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_online())#self.tap_target_start())
         self.details_screen.add_widget(self.play_btn)
-        self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', user_font_size="30sp", pos_hint={'center_x':0.9, "center_y":0.15}, on_press=lambda x: self.download_bar()))
+        self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', user_font_size="30sp", theme_text_color= 'Secondary', pos_hint={'center_x':0.9, "center_y":0.15}, on_press=lambda x: self.download_bar()))
         
     def add_fav(self):
         if self.heart_icon.icon == 'heart-outline':
@@ -233,8 +233,8 @@ class MyApp(MDApp):
         elif self.heart_icon.icon == 'heart':
             #self.heart_icon.icon = 'heart-broken'
             self.heart_icon.icon = 'heart-outline'
-            self.heart_icon.theme_text_color = "Custom"
-            self.heart_icon.text_color = self.theme_cls.text_color
+            self.heart_icon.theme_text_color = 'Secondary'
+            #self.heart_icon.text_color = self.theme_cls.text_color
             toast("Removed from Favorites")
 
     def change_screen(self, screen, direction):
