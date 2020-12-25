@@ -15,31 +15,35 @@ NavigationLayout:
 
             BoxLayout:
                 orientation: 'vertical'
-
-                MDToolbar:
-                    title: app.title
-                    elevation: 10
-                    left_action_items: [['menu', lambda x: nav_drawer.toggle_nav_drawer()]]
+                MDIconButton:
+                    icon: 'menu'
+                    pos_hint: {"center_x":0.05, "center_y":0.95}
+                    on_press: nav_drawer.toggle_nav_drawer()
+                MDBottomAppBar:
+                    MDToolbar:
+                        title: app.title
+                        elevation: 10
+                        icon: "folder"
+                        type: "bottom"
+                        mode: "end"
+                        on_action_button: app.file_manager_open()  
                     
                     
                 Widget:
-            MDFloatingActionButton:
-                icon: "folder"
-                pos_hint: {'x':0.9, "y":0.1}
-                text_color: app.theme_cls.primary_color
-                elevation_normal: 10
-                on_press: app.file_manager_open()            
             
-            MDTextField:
+            MDTextFieldRound:
                 id: song_name
-                hint_text: "Search"
+                hint_text: "Songs, artists or podcasts"
                 helper_text: "Enter song name here"
-                pos_hint: {'center_x': 0.5, 'center_y': 0.7}
-                size_hint_x: 0.5
+                pos_hint: {'center_x': 0.5, 'center_y': 0.6}
+                size_hint: 0.5, 0.05
+                line_color: app.theme_cls.bg_light if app.theme_cls.theme_style == 'Dark' else app.theme_cls.bg_darkest
+                normal_color: app.theme_cls.bg_light if app.theme_cls.theme_style == 'Dark' else app.theme_cls.bg_darkest
+                color_active: app.theme_cls.bg_normal
+                foreground_color: app.theme_cls.secondary_text_color
                 helper_text_mode: "on_focus"
-                icon_right: "music-note-outline"
-                icon_right_color: app.theme_cls.text_color if self.text == '' else app.theme_cls.primary_color
-                on_focus: self.icon_right_color = app.theme_cls.primary_color
+                icon_left: "music-note-outline"
+                icon_left_color: app.theme_cls.text_color if self.text == '' else app.theme_cls.primary_color
                 
 
             MDCard:

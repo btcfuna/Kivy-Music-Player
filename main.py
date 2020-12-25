@@ -20,6 +20,7 @@ from kivy.storage.jsonstore import JsonStore
 from kivy.loader import Loader
 from kivy.lang import Builder
 ##############################
+#Window.size = (390, 650)
 import threading
 import requests
 import base64
@@ -415,10 +416,10 @@ class MyApp(MDApp):
         bottom_sheet_menu = MDGridBottomSheet(radius=15,radius_from='top')
         data = [
             {"name":"Telegram", "icon":"telegram", "link":"https://t.me/sangwan5688"},
-            {"name":"Instagram", "icon":"instagram", "link":"www.instagram.com"},
-            {"name":"Twitter", "icon":"twitter-box", "link":"www.twitter.com"},
+            {"name":"Instagram", "icon":"instagram", "link":"https://www.instagram.com/sangwan5688/"},
+            {"name":"Twitter", "icon":"twitter-box", "link":"https://twitter.com/sangwan5688"},
             {"name":"Mail", "icon":"gmail", "link":"https://mail.google.com/mail/?view=cm&fs=1&to=blackholeyoucantescape@gmail.com&su=Regarding+Mobile+App"},
-            {"name":"Facebook", "icon":"facebook-box", "link":"www.facebook.com"},
+            {"name":"Facebook", "icon":"facebook-box", "link":"https://www.facebook.com/ankit.sangwan.5688"},
         ]
         for item in data:
             bottom_sheet_menu.add_item(
