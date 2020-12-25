@@ -20,16 +20,15 @@ NavigationLayout:
                     title: app.title
                     elevation: 10
                     left_action_items: [['menu', lambda x: nav_drawer.toggle_nav_drawer()]]
-
-                MDBottomAppBar:
-                    MDToolbar:
-                        text: "Location"
-                        mode: 'end'
-                        type: 'bottom'
-                        icon: "folder"
-                        text_color: app.theme_cls.primary_color
-                        on_action_button: app.file_manager_open()
+                    
+                    
                 Widget:
+            MDFloatingActionButton:
+                icon: "folder"
+                pos_hint: {'x':0.9, "y":0.1}
+                text_color: app.theme_cls.primary_color
+                elevation_normal: 10
+                on_press: app.file_manager_open()            
             
             MDTextField:
                 id: song_name
@@ -39,31 +38,25 @@ NavigationLayout:
                 size_hint_x: 0.5
                 helper_text_mode: "on_focus"
                 icon_right: "music-note-outline"
-                icon_right_color: app.theme_cls.primary_color
+                icon_right_color: app.theme_cls.text_color if self.text == '' else app.theme_cls.primary_color
+                on_focus: self.icon_right_color = app.theme_cls.primary_color
+                
 
             MDCard:
                 size_hint: None, None
                 pos_hint: {'center_x':0.5, 'center_y':0.5}
-                size : 88,37
+                size : search_btn.size
                 elevation: 10
                 radius:[3,]
                 border_radius:3
-                MDFlatButton:
+                MDRaisedButton:
                     id: search_btn
                     text: 'SEARCH'
                     pos_hint: {'center_x':0.5, 'center_y':0.5}
-                    text_color: app.theme_cls.primary_color
+                    md_bg_color: app.theme_cls.primary_color 
+                    text_color: (1,1,1,1)
                     on_press:
                         app.show_data()
-                    
-                    
-            MDSpinner:
-                id: spinner
-                padding: 10
-                size_hint: None, None
-                size: dp(46), dp(46)
-                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-                active: False
 
         Screen:
             id: SongListScreen
@@ -273,4 +266,4 @@ NavigationLayout:
                             text_color: app.theme_cls.primary_color if screen_manager.current == 'AboutScreen' else app.theme_cls.text_color
                             on_release:
                                 nav_drawer.toggle_nav_drawer()
-                                app.change_screen('AboutScreen', 'left')
+                                app.change_screen('AboutScreen', 'left')    
