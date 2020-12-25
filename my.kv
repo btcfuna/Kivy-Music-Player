@@ -21,7 +21,6 @@ NavigationLayout:
                     on_press: nav_drawer.toggle_nav_drawer()
                 MDBottomAppBar:
                     MDToolbar:
-                        title: app.title
                         elevation: 10
                         icon: "folder"
                         type: "bottom"
@@ -31,25 +30,32 @@ NavigationLayout:
                     
                 Widget:
             MDIconButton:
-                icon: 'cloud-search'
+                icon: 'music'
                 pos_hint: {"center_x":0.5, "center_y":0.75}
                 theme_text_color: "Custom"
                 text_color: app.theme_cls.primary_color
-                user_font_size: "150sp" 
+                user_font_size: "200sp"
+            MDCard:
+                size_hint: None, None
+                pos_hint: {'center_x':0.5, 'center_y':0.5}
+                size_hint: 0.54,0.06
+                elevation: 8
+                radius:[10,]
+                border_radius:10
             MDTextFieldRound:
                 id: song_name
                 hint_text: "Songs, artists or podcasts"
                 helper_text: "Enter song name here"
                 pos_hint: {'center_x': 0.5, 'center_y': 0.5}
                 size_hint: 0.5, 0.05
-                line_color: app.theme_cls.bg_light if app.theme_cls.theme_style == 'Dark' else app.theme_cls.bg_darkest
-                normal_color: app.theme_cls.bg_light if app.theme_cls.theme_style == 'Dark' else app.theme_cls.bg_darkest
-                color_active: app.theme_cls.bg_normal
+                line_color: app.theme_cls.bg_light
+                normal_color: app.theme_cls.bg_light
+                color_active: app.theme_cls.bg_light
                 foreground_color: app.theme_cls.secondary_text_color
                 helper_text_mode: "on_focus"
-                icon_left: "music-note-outline"
+                icon_left: "magnify"
                 icon_left_color: app.theme_cls.text_color if self.text == '' else app.theme_cls.primary_color
-                
+                    
 
             MDCard:
                 size_hint: None, None
