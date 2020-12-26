@@ -12,6 +12,7 @@ NavigationLayout:
             name: 'MainScreen'
             song_name: song_name
             MDBottomNavigation:
+                elevation: 10
 
                 MDBottomNavigationItem:
                     name: 'home'
@@ -63,16 +64,15 @@ NavigationLayout:
                             md_bg_color: app.theme_cls.primary_color 
                             text_color: (1,1,1,1)
                             on_press:
-                                app.show_data()
+                                app.show_data(song_name.text)
                 MDBottomNavigationItem:
                     name: 'trending'
                     text: 'Trending'
                     icon: 'trending-up'
                     on_tab_press: app.add_trend()
-                    BoxLayout:
-                        orientation: "vertical"
-                        MDTabs:
-                            id: tabs
+                    ScrollView:
+                        MDList:
+                            id: trend_list
                             
                            
 

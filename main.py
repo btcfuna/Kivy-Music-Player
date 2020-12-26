@@ -21,6 +21,7 @@ from kivy.loader import Loader
 from kivy.lang import Builder
 from kivy.uix.floatlayout import FloatLayout
 from kivymd.uix.tab import MDTabsBase
+from kivy.clock import Clock
 ##############################
 #Window.size = (390, 650)
 import threading
@@ -58,10 +59,14 @@ class MyApp(MDApp):
     status = True
     last_screen = 'MainScreen'
 
-    def on_start(self):
-        self.root.ids.tabs.add_widget(Tab(text='Local'))
-        self.root.ids.tabs.add_widget(Tab(text='Global'))
-        
+#    def on_start(self):
+#        self.root.ids.tabs.add_widget(Tab(text='Local'))
+#        self.root.ids.tabs.add_widget(Tab(text='Global'))
+    #def on_start(self):
+    #    self.trend_list = self.root.ids.trend_list
+    #    self.trend_list.clear_widgets()
+    #    add_trend_thread=threading.Thread(target=self.add_songs)
+    #    add_trend_thread.start()
 
     def build(self):
         if self.user_data.exists('theme'):
@@ -146,11 +151,17 @@ class MyApp(MDApp):
             f.write(requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content)
 
     def add_trend(self):
-        pass
-        #self.trend_list = self.root.ids.trend_list
-        #self.trend_list.clear_widgets()
-        #add_trend_thread=threading.Thread(target=self.add_songs)
-        #add_trend_thread.start()
+        self.trend_list = self.root.ids.trend_list
+        if self.trend_list.children == []:
+            Clock.schedule_once(self.thread_trend, 0.2)
+            self.dia = MDDialog(text="Loading trending songs", size_hint=(0.7,1))
+            self.dia.open()
+            
+    def thread_trend(self, *args):
+        #self.dia = MDDialog(text="Loading trending songs", size_hint=(0.7,1))
+        #self.dia.open()
+        self.add_trend_thread=threading.Thread(target=self.add_songs)
+        self.add_trend_thread.start()
 
     def add_songs(self):
         with open('top_local_chart.csv', newline='') as csvfile:
@@ -161,11 +172,12 @@ class MyApp(MDApp):
                     song_name = row[1]
                     art_name = row[2]
                     #print('adding {}'.format(pos))
-                    lst = TwoLineAvatarListItem(text=song_name, secondary_text=art_name, on_press=lambda x: print('pass'))
+                    lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
                     lst.add_widget(IconLeftWidget(icon='music-note-outline'))
                     self.trend_list.add_widget(lst)
                 except:
                     continue
+        self.dia.dismiss()
 
     def push_notify(self, head):
         plyer.notification.notify(head, "Download complete")
@@ -184,23 +196,23 @@ class MyApp(MDApp):
         lst.add_widget(IconLeftWidget(icon='music'))
         self.down_list.add_widget(lst)
 
-    def show_data(self, *args):
+    def show_data(self, query):
         close_btn = MDFlatButton(text="Close", on_release=self.close_dialog)
-        if self.root.ids.song_name.text == '':
+        if query == '':
             self.dia = MDDialog(title="Invalid Name", text="Please enter a song name", size_hint=(0.7,1), buttons=[close_btn])
             self.dia.open()
         
         else:
+            self.change_screen('SongListScreen', 'left')
             self.dia = MDDialog(text="Searching for songs ...", size_hint=(0.7,1))
-            t1 = threading.Thread(target=self.show_list)
+            self.dia.open()
+            t1 = threading.Thread(target=self.show_list, args=(query,))
             t1.start()
 
-    def show_list(self):
-        self.change_screen('SongListScreen', 'left')
-        self.dia.open()
+    def show_list(self, query):
         self.list_view = self.root.ids.container
         self.list_view.clear_widgets()
-        self.search_data = json.loads(requests.get(search_base_url+self.root.ids.song_name.text).text.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
+        self.search_data = json.loads(requests.get(search_base_url+query).text.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
         for i in range(len(self.search_data)):
             self.down_img(i)
         self.dia.dismiss()
@@ -586,7 +598,7 @@ class MyApp(MDApp):
                 self.change_screen('MainScreen', 'right')
         if keyboard == 13:
             if self.root.ids.screen_manager.current == 'MainScreen':
-                self.show_data()
+                self.show_data(self.root.ids.song_name.text)
             else:
                 pass
         return True
