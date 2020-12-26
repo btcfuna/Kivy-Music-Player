@@ -40,7 +40,8 @@ if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission, check_permission
     request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
-
+    import plyer
+    from jnius import autoclass
 
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
@@ -81,6 +82,10 @@ class MyApp(MDApp):
         else:
             self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
         self.data_path = os.path.join(self.user_data_dir, 'cache')
+        PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        activity = PythonActivity.mActivity
+        Context = autoclass('android.content.Context')
+        vibrator = activity.getSystemService(Context.VIBRATOR_SERVICE)
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -108,6 +113,8 @@ class MyApp(MDApp):
             self.theme_cls.theme_style = "Light"
             self.user_data.put('theme', mode='Light')
 
+    def push_notify(self, head):
+        plyer.notification.notify(head, "Download complete")
     def download_list(self):
         self.down_list = self.root.ids.downloadlist
         self.down_list.clear_widgets()
@@ -265,7 +272,7 @@ class MyApp(MDApp):
 
     def download_bar(self):
         self.download_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.5}, size_hint_x = 0.8, value = 0, color = self.theme_cls.primary_color)
-        self.dia = MDDialog(title='Downloading', buttons=[MDFlatButton(text="CANCEL", text_color=self.theme_cls.primary_color, on_press=lambda x: self.cancel())])
+        self.dia = MDDialog(text='Downloading', buttons=[MDFlatButton(text="CANCEL", text_color=self.theme_cls.primary_color, on_press=lambda x: self.cancel())])
         #self.dia.add_widget(IconLeftWidget(icon='download', pos_hint={'center_x': .1, 'center_y': .1}))
         self.dia.add_widget(self.download_progress)
         self.dia.open()
@@ -479,6 +486,7 @@ class MyApp(MDApp):
         close_btn = MDIconButton(icon='checkbox-marked-circle-outline', theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=self.close_dialog)
         self.dia = MDDialog(title="Download Complete", text="Song Downloaded Successfully!", size_hint=(0.7,1), buttons=[close_btn])
         self.dia.open()
+        plyer.notification.notify(self.song_name+' by '+self.artist_name, "Download complete")
         #toast("Song Downloaded Successfully!")
 
     def set_nav_color(self, item):
