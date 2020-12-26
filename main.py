@@ -19,6 +19,8 @@ from kivymd.uix.taptargetview import MDTapTargetView
 from kivy.storage.jsonstore import JsonStore
 from kivy.loader import Loader
 from kivy.lang import Builder
+from kivy.uix.floatlayout import FloatLayout
+from kivymd.uix.tab import MDTabsBase
 ##############################
 #Window.size = (390, 650)
 import threading
@@ -29,6 +31,7 @@ import os
 import io
 import shutil
 import time
+import csv
 import webbrowser
 from pyDes import *
 from mutagen.mp4 import MP4, MP4Cover
@@ -47,10 +50,19 @@ search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_for
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
 
 
+class Tab(FloatLayout, MDTabsBase):
+    pass
+
 class MyApp(MDApp):
     title = "Black Hole"
     status = True
     last_screen = 'MainScreen'
+
+    def on_start(self):
+        self.root.ids.tabs.add_widget(Tab(text='Local'))
+        self.root.ids.tabs.add_widget(Tab(text='Global'))
+        
+
     def build(self):
         if self.user_data.exists('theme'):
             self.theme_cls.theme_style = self.user_data.get('theme')['mode']
@@ -65,6 +77,17 @@ class MyApp(MDApp):
         #self.theme_cls.bg_darkest
         Loader.loading_image = 'cover.jpg'
         #return Builder.load_string(main)
+        if self.user_data.exists('sync'):
+            if int(time.time()) - int(self.user_data.get('sync')['time']) > 21600:
+                sync_thread = threading.Thread(target=self.get_chart)
+                sync_thread.start()
+                self.user_data.put('sync', time=time.time())
+            else:
+                print('already synced')
+        else:
+            sync_thread = threading.Thread(target=self.get_chart)
+            sync_thread.start()
+            self.user_data.put('sync', time=time.time())
 
     def tap_target_start(self):
         if self.tap_target_view.state == "close":
@@ -74,18 +97,18 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = 'data.json'#os.path.join(self.user_data_dir, 'data.json')
         self.user_data = JsonStore(self.user_data_path)
         Window.bind(on_keyboard=self.events)
         if self.user_data.exists('download_path'):
             self.path = self.user_data.get('download_path')['path']
         else:
-            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = os.path.join(self.user_data_dir, 'cache')
-        PythonActivity = autoclass('org.kivy.android.PythonActivity')
-        activity = PythonActivity.mActivity
-        Context = autoclass('android.content.Context')
-        vibrator = activity.getSystemService(Context.VIBRATOR_SERVICE)
+            self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
+        #PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        #activity = PythonActivity.mActivity
+        #Context = autoclass('android.content.Context')
+        #vibrator = activity.getSystemService(Context.VIBRATOR_SERVICE)
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -112,6 +135,37 @@ class MyApp(MDApp):
         else:
             self.theme_cls.theme_style = "Light"
             self.user_data.put('theme', mode='Light')
+    
+    def on_tab_switch(
+        self, instance_tabs, instance_tab, instance_tab_label, tab_text
+    ):
+        instance_tab.ids.label.text = tab_text
+
+    def get_chart(self):
+        with open('top_local_chart.csv', 'wb') as f:
+            f.write(requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content)
+
+    def add_trend(self):
+        pass
+        #self.trend_list = self.root.ids.trend_list
+        #self.trend_list.clear_widgets()
+        #add_trend_thread=threading.Thread(target=self.add_songs)
+        #add_trend_thread.start()
+
+    def add_songs(self):
+        with open('top_local_chart.csv', newline='') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',')
+            for row in spamreader:
+                try:
+                    pos = int(row[0])
+                    song_name = row[1]
+                    art_name = row[2]
+                    #print('adding {}'.format(pos))
+                    lst = TwoLineAvatarListItem(text=song_name, secondary_text=art_name, on_press=lambda x: print('pass'))
+                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
+                    self.trend_list.add_widget(lst)
+                except:
+                    continue
 
     def push_notify(self, head):
         plyer.notification.notify(head, "Download complete")
@@ -153,7 +207,7 @@ class MyApp(MDApp):
 
     def down_img(self, i):
         lst = TwoLineAvatarListItem(text=self.search_data[i]['title'], secondary_text=self.search_data[i]['more_info']['primary_artists'], on_press=lambda x: self.song_details(i))
-        lst.add_widget(IconLeftWidget(icon='music'))
+        lst.add_widget(IconLeftWidget(icon='music-note-outline'))
         self.list_view.add_widget(lst)
 
     def fetch_details(self):
@@ -208,10 +262,10 @@ class MyApp(MDApp):
         self.fetch_thread.start()
         self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
         song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True)
-        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
+        card = MDCard(orientation='vertical', border_radius= 20, radius= [15], pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
         card.add_widget(song_image)
         self.details_screen.add_widget(card)
-        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Primary', font_style='H4', bold=True, pos_hint={"top":0.85}))
+        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.85}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
         self.heart_icon = MDIconButton(icon='heart-outline', user_font_size="30sp", theme_text_color= 'Secondary', pos_hint={"center_x":0.1, "center_y":0.15}, on_press=lambda x: self.add_fav())
@@ -224,8 +278,8 @@ class MyApp(MDApp):
             description_text="Feature currently under development",
             widget_position="left_bottom",
         )
-        self.details_screen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.rewind()))
-        self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.forward()))
+        self.details_screen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="50sp", on_release=lambda x: self.rewind()))
+        self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="50sp", on_release=lambda x: self.forward()))
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_online())#self.tap_target_start())
         self.details_screen.add_widget(self.play_btn)
         self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', user_font_size="30sp", theme_text_color= 'Secondary', pos_hint={'center_x':0.9, "center_y":0.15}, on_press=lambda x: self.download_bar()))

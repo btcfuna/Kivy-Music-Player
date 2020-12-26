@@ -7,71 +7,74 @@
 NavigationLayout:
     ScreenManager:
         id: screen_manager
-
         Screen:
             id: MainScreen
             name: 'MainScreen'
             song_name: song_name
+            MDBottomNavigation:
 
-            BoxLayout:
-                orientation: 'vertical'
-                MDBottomAppBar:
-                    MDToolbar:
+                MDBottomNavigationItem:
+                    name: 'home'
+                    text: 'Search'
+                    icon: 'magnify'
+                    MDIconButton:
+                        icon: 'music'
+                        pos_hint: {"center_x":0.5, "center_y":0.75}
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
+                        user_font_size: "300sp"
+                    MDIconButton:
+                        icon: 'menu'
+                        pos_hint: {"center_x":0.05, "center_y":0.95}
+                        on_press: nav_drawer.toggle_nav_drawer()
+                    MDCard:
+                        size_hint: None, None
+                        pos_hint: {'center_x':0.5, 'center_y':0.5}
+                        size_hint: 0.7,0.06
+                        elevation: 8
+                        radius: [10,]
+                        border_radius: 10
+                    MDTextFieldRound:
+                        id: song_name
+                        hint_text: "Songs, artists or podcasts"
+                        helper_text: "Enter song name here"
+                        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                        size_hint: 0.6, 0.05
+                        line_color: app.theme_cls.bg_light
+                        normal_color: app.theme_cls.bg_light
+                        color_active: app.theme_cls.bg_light
+                        foreground_color: app.theme_cls.secondary_text_color
+                        helper_text_mode: "on_focus"
+                        icon_left: "magnify"
+                        icon_left_color: app.theme_cls.text_color if self.text == '' else app.theme_cls.primary_color
+                            
+
+                    MDCard:
+                        size_hint: None, None
+                        pos_hint: {'center_x':0.5, 'center_y':0.4}
+                        size : search_btn.size
                         elevation: 10
-                        icon: "folder"
-                        type: "bottom"
-                        mode: "end"
-                        on_action_button: app.file_manager_open()  
-                    
-                    
-                Widget:
-            MDIconButton:
-                icon: 'music'
-                pos_hint: {"center_x":0.5, "center_y":0.75}
-                theme_text_color: "Custom"
-                text_color: app.theme_cls.primary_color
-                user_font_size: "300sp"
-            MDIconButton:
-                icon: 'menu'
-                pos_hint: {"center_x":0.05, "center_y":0.95}
-                on_press: nav_drawer.toggle_nav_drawer()
-            MDCard:
-                size_hint: None, None
-                pos_hint: {'center_x':0.5, 'center_y':0.5}
-                size_hint: 0.7,0.06
-                elevation: 8
-                radius: [10,]
-                border_radius: 10
-            MDTextFieldRound:
-                id: song_name
-                hint_text: "Songs, artists or podcasts"
-                helper_text: "Enter song name here"
-                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-                size_hint: 0.6, 0.05
-                line_color: app.theme_cls.bg_light
-                normal_color: app.theme_cls.bg_light
-                color_active: app.theme_cls.bg_light
-                foreground_color: app.theme_cls.secondary_text_color
-                helper_text_mode: "on_focus"
-                icon_left: "magnify"
-                icon_left_color: app.theme_cls.text_color if self.text == '' else app.theme_cls.primary_color
-                    
-
-            MDCard:
-                size_hint: None, None
-                pos_hint: {'center_x':0.5, 'center_y':0.4}
-                size : search_btn.size
-                elevation: 10
-                radius:[3,]
-                border_radius:3
-                MDRaisedButton:
-                    id: search_btn
-                    text: 'SEARCH'
-                    pos_hint: {'center_x':0.5, 'center_y':0.5}
-                    md_bg_color: app.theme_cls.primary_color 
-                    text_color: (1,1,1,1)
-                    on_press:
-                        app.show_data()
+                        radius:[3,]
+                        border_radius:3
+                        MDRaisedButton:
+                            id: search_btn
+                            text: 'SEARCH'
+                            pos_hint: {'center_x':0.5, 'center_y':0.5}
+                            md_bg_color: app.theme_cls.primary_color 
+                            text_color: (1,1,1,1)
+                            on_press:
+                                app.show_data()
+                MDBottomNavigationItem:
+                    name: 'trending'
+                    text: 'Trending'
+                    icon: 'trending-up'
+                    on_tab_press: app.add_trend()
+                    BoxLayout:
+                        orientation: "vertical"
+                        MDTabs:
+                            id: tabs
+                            
+                           
 
         Screen:
             id: SongListScreen
@@ -167,25 +170,36 @@ NavigationLayout:
                         text: "Dark Mode"
                         padding_x: "30dp"
                         theme_text_color: 'Primary'
-                        pos_hint: {'center_y': .7}
+                        pos_hint: {'center_y': .9}
                     MDSwitch:
                         id: dark_mode_switch
                         active: False
-                        pos_hint: {'center_x': 0.9, 'center_y': .7}
+                        pos_hint: {'center_x': 0.9, 'center_y': .9}
                         on_active: app.change_theme()
                 
                     MDLabel:
                         text: "Current version"
                         padding_x: "30dp"
                         theme_text_color: 'Primary'
-                        pos_hint: {'center_y': .3}
+                        pos_hint: {'center_y': 0.5}
                     MDLabel:
                         text: "beta 0.6"
                         padding_x: "30dp"
                         theme_text_color: 'Secondary'
                         halign: 'right'
-                        pos_hint: {'center_y': .3}
-                Widget:
+                        pos_hint: {'center_y': 0.5}
+                    MDLabel:
+                        text: "Download location"
+                        padding_x: "30dp"
+                        theme_text_color: 'Primary'
+                        pos_hint: {'center_y': 0.7}
+                    MDTextButton:
+                        text: app.path
+                        padding_x: "30dp"
+                        custom_color: app.theme_cls.secondary_text_color
+                        pos_hint: {'center_x':0.9, 'center_y': 0.7}
+                        on_press: app.file_manager_open()
+
 
     MDNavigationDrawer:
         id: nav_drawer
@@ -288,3 +302,9 @@ NavigationLayout:
                             on_release:
                                 nav_drawer.toggle_nav_drawer()
                                 app.change_screen('AboutScreen', 'left')    
+
+<Tab>:
+    MDLabel:
+        id: label
+        text: 'Local'
+        halign: 'center'
