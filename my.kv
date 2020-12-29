@@ -1,10 +1,5 @@
-<Root@BoxLayout>
-    orientation: 'vertical'
 
-    MDToolbar:
-        title: app.title
-
-NavigationLayout:
+MDNavigationLayout:
     ScreenManager:
         id: screen_manager
         Screen:
@@ -27,7 +22,7 @@ NavigationLayout:
                     MDIconButton:
                         icon: 'menu'
                         pos_hint: {"center_x":0.05, "center_y":0.95}
-                        on_press: nav_drawer.toggle_nav_drawer()
+                        on_press: nav_drawer.set_state("open")
                     MDCard:
                         size_hint: None, None
                         pos_hint: {'center_x':0.5, 'center_y':0.5}
@@ -70,11 +65,27 @@ NavigationLayout:
                     text: 'Trending'
                     icon: 'trending-up'
                     on_tab_press: app.add_trend()
-                    ScrollView:
-                        MDList:
-                            id: trend_list
-                            
-                           
+                    MDSwiper:
+                        id: trend_grid
+                    
+
+                    
+                MDBottomNavigationItem:
+                    name: 'top'
+                    text: 'Top 200'
+                    icon: 'chart-line'
+                    on_tab_press: app.add_top()
+                    MDTabs:
+                        Tab:
+                            text: 'Local'
+                            ScrollView:
+                                MDList:
+                                    id: top_list
+                        Tab:
+                            text: 'Global'
+                            ScrollView:
+                                MDList:
+                                    id: top_global_list
 
         Screen:
             id: SongListScreen
@@ -245,14 +256,14 @@ NavigationLayout:
                         theme_text_color: "Custom"
                         text_color: app.theme_cls.primary_color if screen_manager.current == 'MainScreen' else app.theme_cls.text_color
                         on_release:
-                            nav_drawer.toggle_nav_drawer()
+                            nav_drawer.set_state("close")
                             app.change_screen('MainScreen', 'right')
                         IconLeftWidget:
                             icon: 'home-outline'
                             theme_text_color: "Custom"
                             text_color: app.theme_cls.primary_color if screen_manager.current == 'MainScreen' else app.theme_cls.text_color
                             on_release:
-                                nav_drawer.toggle_nav_drawer()
+                                nav_drawer.set_state("close")
                                 app.change_screen('MainScreen', 'right')
                         
                         
@@ -262,7 +273,7 @@ NavigationLayout:
                         text_color: app.theme_cls.primary_color if screen_manager.current == 'DownloadsScreen' else app.theme_cls.text_color
                         on_release:
                             app.download_list()
-                            nav_drawer.toggle_nav_drawer()
+                            nav_drawer.set_state("close")
                             app.change_screen('DownloadsScreen', 'left')
                         IconLeftWidget:
                             icon: 'folder-outline'
@@ -270,7 +281,7 @@ NavigationLayout:
                             text_color: app.theme_cls.primary_color if screen_manager.current == 'DownloadsScreen' else app.theme_cls.text_color
                             on_release:
                                 app.download_list()
-                                nav_drawer.toggle_nav_drawer()
+                                nav_drawer.set_state("close")
                                 app.change_screen('DownloadsScreen', 'left')
                     
                     OneLineIconListItem:
@@ -278,14 +289,14 @@ NavigationLayout:
                         theme_text_color: "Custom"
                         text_color: app.theme_cls.primary_color if screen_manager.current == 'SettingsScreen' else app.theme_cls.text_color
                         on_release:
-                            nav_drawer.toggle_nav_drawer()
+                            nav_drawer.set_state("close")
                             app.change_screen('SettingsScreen', 'left')
                         IconLeftWidget:
                             icon: 'cogs'
                             theme_text_color: "Custom"
                             text_color: app.theme_cls.primary_color if screen_manager.current == 'SettingsScreen' else app.theme_cls.text_color
                             on_release:
-                                nav_drawer.toggle_nav_drawer()
+                                nav_drawer.set_state("close")
                                 app.change_screen('SettingsScreen', 'left')
 
                     OneLineIconListItem:
@@ -293,18 +304,15 @@ NavigationLayout:
                         theme_text_color: "Custom"
                         text_color: app.theme_cls.primary_color if screen_manager.current == 'AboutScreen' else app.theme_cls.text_color
                         on_release:
-                            nav_drawer.toggle_nav_drawer()
+                            nav_drawer.set_state("close")
                             app.change_screen('AboutScreen', 'left')
                         IconLeftWidget:
                             icon: 'information-outline'
                             theme_text_color: "Custom"
                             text_color: app.theme_cls.primary_color if screen_manager.current == 'AboutScreen' else app.theme_cls.text_color
                             on_release:
-                                nav_drawer.toggle_nav_drawer()
+                                nav_drawer.set_state("close")
                                 app.change_screen('AboutScreen', 'left')    
 
 <Tab>:
-    MDLabel:
-        id: label
-        text: 'Local'
-        halign: 'center'
+    id: label

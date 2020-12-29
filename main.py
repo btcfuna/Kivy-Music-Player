@@ -1,4 +1,3 @@
-from logging import root
 from kivy import animation
 from kivy.core import audio
 from kivy.uix.image import Image, AsyncImage, CoreImage
@@ -24,6 +23,7 @@ from kivymd.uix.tab import MDTabsBase
 from kivy.clock import Clock
 ##############################
 #Window.size = (390, 650)
+from concurrent.futures import ThreadPoolExecutor
 import threading
 import requests
 import base64
@@ -44,12 +44,32 @@ if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission, check_permission
     request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
-    import plyer
+    from plyer import notification
     from jnius import autoclass
+    SERVICE_NAME = u'{packagename}.Service{servicename}'.format(
+    packagename=u'org.kivy.oscservice',
+    servicename=u'black'
+)
 
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
-
+playlist_details_base_url = "https://www.jiosaavn.com/api.php?__call=webapi.get&token={}&type=playlist&p=1&n=20&includeMetaTags=0&ctx=web6dot0&api_version=4&_format=json&_marker=0"
+playlist_ids = {
+  "Weekly Top Songs" : "8MT-LQlP35c_",
+  "Weekly Top Jiotunes" : "znKA,YavndBuOxiEGmm6lQ__",
+  "Hindi Top Songs" : "8MT-LQlP35c_",
+  "Hindi Top Jiotunes":"AZNZNH1EwNjfemJ68FuXsA__",
+  "English Top Songs" : "LdbVc1Z5i9E_",
+  "English Top Jiotunes" : "xXiMISqMjsrfemJ68FuXsA__",
+  "Punjabi Top Songs":"W6DUe-fP3X8_",
+  "Punjabi Top Jiotunes":"mzDerWPsSwiO0eMLZZxqsA__",
+  "Latest Punjabi Songs":"T,w3Z-u7t6A_",
+  "VYRL Top 20":"zvYYPLOvojJFo9wdEAzFBA__",
+  "Pop Mein Top":"pDQtHvJRh4IGSw2I1RxdhQ__",
+  "Haryanvi Top Songs" :"ar5lExlDmbwwkg5tVhI3fw__",
+  "Haryanvi Top Jiotunes":"xgyTegenCljc1EngHtQQ2g__",
+  "Rajasthani Top Songs":"Xm5PW-mxs4c_"
+  }
 
 class Tab(FloatLayout, MDTabsBase):
     pass
@@ -93,6 +113,7 @@ class MyApp(MDApp):
             sync_thread = threading.Thread(target=self.get_chart)
             sync_thread.start()
             self.user_data.put('sync', time=time.time())
+            Clock.schedule_once(self.thread_top, 5)
 
     def tap_target_start(self):
         if self.tap_target_view.state == "close":
@@ -149,19 +170,32 @@ class MyApp(MDApp):
     def get_chart(self):
         with open('top_local_chart.csv', 'wb') as f:
             f.write(requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content)
+        with open('top_global_chart.csv', 'wb') as f:
+            f.write(requests.get("https://spotifycharts.com/regional/global/daily/latest/download").content)
 
-    def add_trend(self):
-        self.trend_list = self.root.ids.trend_list
-        if self.trend_list.children == []:
-            Clock.schedule_once(self.thread_trend, 0.2)
-            self.dia = MDDialog(text="Loading trending songs", size_hint=(0.7,1))
+    def add_top(self):
+        self.top_list = self.root.ids.top_list
+        self.top_global_list = self.root.ids.top_global_list
+        if self.top_list.children == []:
+            Clock.schedule_once(self.thread_top, 0.2)
+            self.dia = MDDialog(text="Loading spotify top 200 chart", size_hint=(0.7,1))
             self.dia.open()
             
-    def thread_trend(self, *args):
-        #self.dia = MDDialog(text="Loading trending songs", size_hint=(0.7,1))
-        #self.dia.open()
-        self.add_trend_thread=threading.Thread(target=self.add_songs)
-        self.add_trend_thread.start()
+    def thread_top(self, *args):
+        self.add_top_thread=threading.Thread(target=self.add_songs)
+        self.add_top_thread.start()
+    
+    def add_trend(self):
+        executor = ThreadPoolExecutor(max_workers=10)
+        #t1 = threading.Thread(target=self.get_playlist, args=("zvYYPLOvojJFo9wdEAzFBA__",))
+        #t1.start()
+        for key, values in playlist_ids.items():
+            executor.submit(self.get_playlist, values)
+        #for i in ["znKA,YavndBuOxiEGmm6lQ__", "8MT-LQlP35c_", "LdbVc1Z5i9E_", "xXiMISqMjsrfemJ68FuXsA__"]:
+        #    executor.submit(self.get_playlist, i)
+        executor.shutdown()
+
+            
 
     def add_songs(self):
         with open('top_local_chart.csv', newline='') as csvfile:
@@ -174,13 +208,28 @@ class MyApp(MDApp):
                     #print('adding {}'.format(pos))
                     lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
                     lst.add_widget(IconLeftWidget(icon='music-note-outline'))
-                    self.trend_list.add_widget(lst)
+                    self.top_list.add_widget(lst)
+                except:
+                    continue
+        with open('top_global_chart.csv', newline='') as f:
+            f_csv = csv.reader(f, delimiter=',')
+            print('pass')
+            for row in f_csv:
+                try:
+                    pos = int(row[0])
+                    song_name = row[1]
+                    art_name = row[2]
+                    #print('adding {}'.format(pos))
+                    lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
+                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
+                    self.top_global_list.add_widget(lst)
                 except:
                     continue
         self.dia.dismiss()
 
     def push_notify(self, head):
-        plyer.notification.notify(head, "Download complete")
+        notification.notify(head, "Download complete")
+
     def download_list(self):
         self.down_list = self.root.ids.downloadlist
         self.down_list.clear_widgets()
@@ -237,7 +286,7 @@ class MyApp(MDApp):
             self.song_data['media_url'] = self.decrypt_url(self.song_data['encrypted_media_url'])
             if self.song_data['320kbps']!="true":
                 self.song_dwn_url = self.song_data['media_url'].replace("_320.mp4","_160.mp4")
-
+        
         self.song_name = self.song_data['song']
         self.album = self.song_data['album']
         self.artist_name = self.song_data["primary_artists"]
@@ -249,6 +298,26 @@ class MyApp(MDApp):
         self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.get_pos()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
         self.root.ids.SongDetailsScreen.add_widget(self.play_stamp)
         print('finished fetching details')
+    
+    def get_playlist(self, listId):
+        print('getting playlists')
+        try:
+            response = requests.get(playlist_details_base_url.format(listId))
+            if response.status_code == 200:
+                songs_json = response.text.encode().decode('unicode-escape')
+                songs_json = json.loads(songs_json)
+                print(songs_json['title'])
+                print(songs_json['image'])
+                self.root.ids.trend_grid.add_widget(AsyncImage(source=songs_json['image'], size_hint=(None,None), size=(Window.size[0]*0.5, Window.size[0]*0.5), allow_stretch=True))
+                for items in songs_json['list']:
+                #    items['id']
+                    print(items['title'])
+                #    print(items['subtitle'])
+                    #items['image']
+            return None
+        except Exception as e:
+            print(e)
+            return None
         
 
     def decrypt_url(url):
@@ -273,7 +342,7 @@ class MyApp(MDApp):
         self.fetch_thread = threading.Thread(target=self.fetch_details)
         self.fetch_thread.start()
         self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
-        song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True)
+        song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True, radius=[15, 15, 0, 0, ])
         card = MDCard(orientation='vertical', border_radius= 20, radius= [15], pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
         card.add_widget(song_image)
         self.details_screen.add_widget(card)
@@ -490,9 +559,9 @@ class MyApp(MDApp):
         data = [
             {"name":"Telegram", "icon":"telegram", "link":"https://t.me/sangwan5688"},
             {"name":"Instagram", "icon":"instagram", "link":"https://www.instagram.com/sangwan5688/"},
-            {"name":"Twitter", "icon":"twitter-box", "link":"https://twitter.com/sangwan5688"},
+            {"name":"Twitter", "icon":"twitter", "link":"https://twitter.com/sangwan5688"},
             {"name":"Mail", "icon":"gmail", "link":"https://mail.google.com/mail/?view=cm&fs=1&to=blackholeyoucantescape@gmail.com&su=Regarding+Mobile+App"},
-            {"name":"Facebook", "icon":"facebook-box", "link":"https://www.facebook.com/ankit.sangwan.5688"},
+            {"name":"Facebook", "icon":"facebook", "link":"https://www.facebook.com/ankit.sangwan.5688"},
         ]
         for item in data:
             bottom_sheet_menu.add_item(
@@ -552,7 +621,7 @@ class MyApp(MDApp):
         close_btn = MDIconButton(icon='checkbox-marked-circle-outline', theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=self.close_dialog)
         self.dia = MDDialog(title="Download Complete", text="Song Downloaded Successfully!", size_hint=(0.7,1), buttons=[close_btn])
         self.dia.open()
-        plyer.notification.notify(self.song_name+' by '+self.artist_name, "Download complete")
+        notification.notify(self.song_name+' by '+self.artist_name, "Download complete")
         #toast("Song Downloaded Successfully!")
 
     def set_nav_color(self, item):
