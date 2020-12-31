@@ -65,8 +65,11 @@ MDNavigationLayout:
                     text: 'Trending'
                     icon: 'trending-up'
                     on_tab_press: app.add_trend()
-                    MDSwiper:
-                        id: trend_grid
+                    ScrollView:
+                        size_hint: (1, 2.5)
+                        MDGridLayout:
+                            cols: 2
+                            id: trend_grid
                     
 
                     
@@ -193,12 +196,11 @@ MDNavigationLayout:
                         padding_x: "30dp"
                         theme_text_color: 'Primary'
                         pos_hint: {'center_y': 0.5}
-                    MDLabel:
-                        text: "beta 0.6"
+                    MDTextButton:
+                        text: "Beta v"+app.__version__
                         padding_x: "30dp"
-                        theme_text_color: 'Secondary'
-                        halign: 'right'
-                        pos_hint: {'center_y': 0.5}
+                        custom_color: app.theme_cls.secondary_text_color
+                        pos_hint: {'center_x':0.9, 'center_y': 0.5}
                     MDLabel:
                         text: "Download location"
                         padding_x: "30dp"

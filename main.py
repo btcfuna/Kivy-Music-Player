@@ -40,6 +40,7 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import ID3
 from mutagen.easyid3 import EasyID3
 
+
 if platform == 'android':
     import android
     from android.permissions import request_permissions, Permission, check_permission
@@ -76,6 +77,7 @@ class Tab(FloatLayout, MDTabsBase):
 
 class MyApp(MDApp):
     title = "Black Hole"
+    __version__ = "0.7"
     status = True
     last_screen = 'MainScreen'
 
@@ -112,8 +114,6 @@ class MyApp(MDApp):
         else:
             sync_thread = threading.Thread(target=self.get_chart)
             sync_thread.start()
-            self.user_data.put('sync', time=time.time())
-            Clock.schedule_once(self.thread_top, 5)
 
     def tap_target_start(self):
         if self.tap_target_view.state == "close":
@@ -172,6 +172,7 @@ class MyApp(MDApp):
             f.write(requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content)
         with open('top_global_chart.csv', 'wb') as f:
             f.write(requests.get("https://spotifycharts.com/regional/global/daily/latest/download").content)
+        self.user_data.put('sync', time=time.time())
 
     def add_top(self):
         self.top_list = self.root.ids.top_list
@@ -207,13 +208,13 @@ class MyApp(MDApp):
                     art_name = row[2]
                     #print('adding {}'.format(pos))
                     lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
-                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
+                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))p
                     self.top_list.add_widget(lst)
                 except:
                     continue
         with open('top_global_chart.csv', newline='') as f:
             f_csv = csv.reader(f, delimiter=',')
-            print('pass')
+            #print('pass')
             for row in f_csv:
                 try:
                     pos = int(row[0])
@@ -225,7 +226,10 @@ class MyApp(MDApp):
                     self.top_global_list.add_widget(lst)
                 except:
                     continue
-        self.dia.dismiss()
+        try:
+            self.dia.dismiss()
+        except:
+            pass
 
     def push_notify(self, head):
         notification.notify(head, "Download complete")
@@ -306,18 +310,16 @@ class MyApp(MDApp):
             if response.status_code == 200:
                 songs_json = response.text.encode().decode('unicode-escape')
                 songs_json = json.loads(songs_json)
-                print(songs_json['title'])
-                print(songs_json['image'])
+                #print(songs_json['title'])
+                #print(songs_json['image'])
                 self.root.ids.trend_grid.add_widget(AsyncImage(source=songs_json['image'], size_hint=(None,None), size=(Window.size[0]*0.5, Window.size[0]*0.5), allow_stretch=True))
-                for items in songs_json['list']:
+                #for items in songs_json['list']:
                 #    items['id']
-                    print(items['title'])
+                #    print(items['title'])
                 #    print(items['subtitle'])
                     #items['image']
-            return None
         except Exception as e:
             print(e)
-            return None
         
 
     def decrypt_url(url):
