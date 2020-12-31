@@ -1,5 +1,5 @@
 
-MDNavigationLayout:
+NavigationLayout:
     ScreenManager:
         id: screen_manager
         Screen:
@@ -78,17 +78,10 @@ MDNavigationLayout:
                     text: 'Top 200'
                     icon: 'chart-line'
                     on_tab_press: app.add_top()
-                    MDTabs:
-                        Tab:
-                            text: 'Local'
-                            ScrollView:
-                                MDList:
-                                    id: top_list
-                        Tab:
-                            text: 'Global'
-                            ScrollView:
-                                MDList:
-                                    id: top_global_list
+                    ScrollView:
+                        MDList:
+                            id: top_list
+
 
         Screen:
             id: SongListScreen

@@ -170,13 +170,13 @@ class MyApp(MDApp):
     def get_chart(self):
         with open('top_local_chart.csv', 'wb') as f:
             f.write(requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content)
-        with open('top_global_chart.csv', 'wb') as f:
-            f.write(requests.get("https://spotifycharts.com/regional/global/daily/latest/download").content)
+#        with open('top_global_chart.csv', 'wb') as f:
+#            f.write(requests.get("https://spotifycharts.com/regional/global/daily/latest/download").content)
         self.user_data.put('sync', time=time.time())
 
     def add_top(self):
         self.top_list = self.root.ids.top_list
-        self.top_global_list = self.root.ids.top_global_list
+#        self.top_global_list = self.root.ids.top_global_list
         if self.top_list.children == []:
             Clock.schedule_once(self.thread_top, 0.2)
             self.dia = MDDialog(text="Loading spotify top 200 chart", size_hint=(0.7,1))
@@ -208,24 +208,24 @@ class MyApp(MDApp):
                     art_name = row[2]
                     #print('adding {}'.format(pos))
                     lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
-                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))p
+                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
                     self.top_list.add_widget(lst)
                 except:
                     continue
-        with open('top_global_chart.csv', newline='') as f:
-            f_csv = csv.reader(f, delimiter=',')
-            #print('pass')
-            for row in f_csv:
-                try:
-                    pos = int(row[0])
-                    song_name = row[1]
-                    art_name = row[2]
-                    #print('adding {}'.format(pos))
-                    lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
-                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
-                    self.top_global_list.add_widget(lst)
-                except:
-                    continue
+#        with open('top_global_chart.csv', newline='') as f:
+#            f_csv = csv.reader(f, delimiter=',')
+#            #print('pass')
+#            for row in f_csv:
+#                try:
+#                    pos = int(row[0])
+#                    song_name = row[1]
+#                    art_name = row[2]
+#                    #print('adding {}'.format(pos))
+#                    lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
+#                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
+#                    self.top_global_list.add_widget(lst)
+#                except:
+#                    continue
         try:
             self.dia.dismiss()
         except:
@@ -344,7 +344,7 @@ class MyApp(MDApp):
         self.fetch_thread = threading.Thread(target=self.fetch_details)
         self.fetch_thread.start()
         self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
-        song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True, radius=[15, 15, 0, 0, ])
+        song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True)
         card = MDCard(orientation='vertical', border_radius= 20, radius= [15], pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
         card.add_widget(song_image)
         self.details_screen.add_widget(card)
