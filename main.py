@@ -168,8 +168,8 @@ class MyApp(MDApp):
         instance_tab.ids.label.text = tab_text
 
     def get_chart(self):
-        with open('top_local_chart.csv', 'wb') as f:
-            f.write(requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content)
+        #with open('top_local_chart.csv', 'wb') as f:
+        #    f.write(requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content)
 #        with open('top_global_chart.csv', 'wb') as f:
 #            f.write(requests.get("https://spotifycharts.com/regional/global/daily/latest/download").content)
         self.user_data.put('sync', time=time.time())
@@ -178,7 +178,9 @@ class MyApp(MDApp):
         self.top_list = self.root.ids.top_list
 #        self.top_global_list = self.root.ids.top_global_list
         if self.top_list.children == []:
-            Clock.schedule_once(self.thread_top, 0.2)
+            #executor = ThreadPoolExecutor(max_workers=10)
+            #executor.submit(self.thread_top)
+            Clock.schedule_once(self.thread_top)
             self.dia = MDDialog(text="Loading spotify top 200 chart", size_hint=(0.7,1))
             self.dia.open()
             
@@ -190,28 +192,33 @@ class MyApp(MDApp):
         executor = ThreadPoolExecutor(max_workers=10)
         #t1 = threading.Thread(target=self.get_playlist, args=("zvYYPLOvojJFo9wdEAzFBA__",))
         #t1.start()
-        for key, values in playlist_ids.items():
-            executor.submit(self.get_playlist, values)
+        if self.root.ids.trend_grid.children == []:
+            print('passed1')
+            for key, values in playlist_ids.items():
+                executor.submit(self.get_playlist, values)
         #for i in ["znKA,YavndBuOxiEGmm6lQ__", "8MT-LQlP35c_", "LdbVc1Z5i9E_", "xXiMISqMjsrfemJ68FuXsA__"]:
         #    executor.submit(self.get_playlist, i)
-        executor.shutdown()
-
-            
+        #executor.shutdown()
 
     def add_songs(self):
-        with open('top_local_chart.csv', newline='') as csvfile:
-            spamreader = csv.reader(csvfile, delimiter=',')
-            for row in spamreader:
-                try:
-                    pos = int(row[0])
-                    song_name = row[1]
-                    art_name = row[2]
-                    #print('adding {}'.format(pos))
-                    lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
-                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
-                    self.top_list.add_widget(lst)
-                except:
-                    continue
+        with requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content.decode() as f:
+        #with open('top_local_chart.csv', newline='') as f:
+            print(f.readline())
+            print(f.readline())
+            for row in f:
+            #    print(row.split(","))
+            #spamreader = csv.read (csvfile, delimiter=',')
+            # for row in f.readlines():
+            #     try:
+            #         pos = int(row[0])
+            #         song_name = row[1]
+            #         art_name = row[2]
+            #         #print('adding {}'.format(pos))
+            #         lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
+            #         lst.add_widget(IconLeftWidget(icon='music-note-outline'))
+            #         self.top_list.add_widget(lst)
+            #     except:
+            #         continue
         try:
             self.dia.dismiss()
         except:
@@ -326,7 +333,7 @@ class MyApp(MDApp):
         card = MDCard(orientation='vertical', border_radius= 20, radius= [15], pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
         card.add_widget(song_image)
         self.details_screen.add_widget(card)
-        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.85}))
+        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.825}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
         self.heart_icon = MDIconButton(icon='heart-outline', user_font_size="30sp", theme_text_color= 'Secondary', pos_hint={"center_x":0.1, "center_y":0.15}, on_press=lambda x: self.add_fav())
@@ -601,7 +608,7 @@ class MyApp(MDApp):
         close_btn = MDIconButton(icon='checkbox-marked-circle-outline', theme_text_color="Custom", text_color=self.theme_cls.primary_color, on_release=self.close_dialog)
         self.dia = MDDialog(title="Download Complete", text="Song Downloaded Successfully!", size_hint=(0.7,1), buttons=[close_btn])
         self.dia.open()
-        notification.notify(self.song_name+' by '+self.artist_name, "Download complete")
+        #notification.notify(self.song_name +' by '+ self.artist_name, "Download complete")
         #toast("Song Downloaded Successfully!")
 
     def set_nav_color(self, item):
