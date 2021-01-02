@@ -8,7 +8,7 @@ NavigationLayout:
             song_name: song_name
             MDBottomNavigation:
                 elevation: 10
-
+                panel_color: app.theme_cls.bg_light if app.theme_cls.theme_style == 'Dark' else app.theme_cls.bg_dark
                 MDBottomNavigationItem:
                     name: 'home'
                     text: 'Search'
@@ -70,8 +70,6 @@ NavigationLayout:
                         MDGridLayout:
                             cols: 2
                             id: trend_grid
-                    
-
                     
                 MDBottomNavigationItem:
                     name: 'top'

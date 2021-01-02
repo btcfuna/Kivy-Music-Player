@@ -21,6 +21,7 @@ from kivy.lang import Builder
 from kivy.uix.floatlayout import FloatLayout
 from kivymd.uix.tab import MDTabsBase
 from kivy.clock import Clock
+from kivy.network.urlrequest import UrlRequest
 ##############################
 #Window.size = (390, 650)
 from concurrent.futures import ThreadPoolExecutor
@@ -48,9 +49,13 @@ if platform == 'android':
     from plyer import notification
     from jnius import autoclass
     SERVICE_NAME = u'{packagename}.Service{servicename}'.format(
-    packagename=u'org.kivy.oscservice',
-    servicename=u'black'
-)
+        packagename=u'org.black.black',
+        servicename=u'Myservice'
+    )
+    service = autoclass(SERVICE_NAME)
+    mActivity = autoclass(u'org.kivy.android.PythonActivity').mActivity
+    argument = ''
+    service.start(mActivity, argument)
 
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
@@ -101,7 +106,6 @@ class MyApp(MDApp):
             self.root.ids.dark_mode_switch.active = True
         #self.theme_cls.primary_hue = "A400"
         self.theme_cls.accent_palette = self.theme_cls.primary_palette
-        #self.theme_cls.bg_darkest
         Loader.loading_image = 'cover.jpg'
         #return Builder.load_string(main)
         if self.user_data.exists('sync'):
@@ -131,10 +135,6 @@ class MyApp(MDApp):
         else:
             self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
         self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
-        #PythonActivity = autoclass('org.kivy.android.PythonActivity')
-        #activity = PythonActivity.mActivity
-        #Context = autoclass('android.content.Context')
-        #vibrator = activity.getSystemService(Context.VIBRATOR_SERVICE)
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -212,20 +212,6 @@ class MyApp(MDApp):
                     self.top_list.add_widget(lst)
                 except:
                     continue
-#        with open('top_global_chart.csv', newline='') as f:
-#            f_csv = csv.reader(f, delimiter=',')
-#            #print('pass')
-#            for row in f_csv:
-#                try:
-#                    pos = int(row[0])
-#                    song_name = row[1]
-#                    art_name = row[2]
-#                    #print('adding {}'.format(pos))
-#                    lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
-#                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
-#                    self.top_global_list.add_widget(lst)
-#                except:
-#                    continue
         try:
             self.dia.dismiss()
         except:
@@ -241,13 +227,10 @@ class MyApp(MDApp):
         td.start()
     
     def add_songs_downlist(self):
-        for items in os.listdir(self.path):
-            self.add_down_song(items)
-    
-    def add_down_song(self, item):
-        lst = OneLineAvatarListItem(text=item, on_press=lambda x: self.play_song(os.path.join(self.path, item)))
-        lst.add_widget(IconLeftWidget(icon='music'))
-        self.down_list.add_widget(lst)
+        for item in os.listdir(self.path):
+            lst = OneLineAvatarListItem(text=item, on_press=lambda x, y=item: self.play_song(os.path.join(self.path, y)))
+            lst.add_widget(IconLeftWidget(icon='music'))
+            self.down_list.add_widget(lst)
 
     def show_data(self, query):
         close_btn = MDFlatButton(text="Close", on_release=self.close_dialog)
@@ -258,22 +241,17 @@ class MyApp(MDApp):
         else:
             self.change_screen('SongListScreen', 'left')
             self.dia = MDDialog(text="Searching for songs ...", size_hint=(0.7,1))
+            self.list_view = self.root.ids.container
+            self.list_view.clear_widgets()
             self.dia.open()
-            t1 = threading.Thread(target=self.show_list, args=(query,))
-            t1.start()
+            req = UrlRequest(search_base_url+query.replace(' ','+'), self.show_list)
 
-    def show_list(self, query):
-        self.list_view = self.root.ids.container
-        self.list_view.clear_widgets()
-        self.search_data = json.loads(requests.get(search_base_url+query).text.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
+    def show_list(self, req, result):
+        self.search_data = json.loads(result.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
         for i in range(len(self.search_data)):
-            self.down_img(i)
+            lst = TwoLineAvatarListItem(text=self.search_data[i]['title'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), secondary_text=self.search_data[i]['more_info']['primary_artists'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), on_press=lambda x,y=i: self.song_details(y))
+            self.list_view.add_widget(lst)
         self.dia.dismiss()
-
-    def down_img(self, i):
-        lst = TwoLineAvatarListItem(text=self.search_data[i]['title'], secondary_text=self.search_data[i]['more_info']['primary_artists'], on_press=lambda x: self.song_details(i))
-        lst.add_widget(IconLeftWidget(icon='music-note-outline'))
-        self.list_view.add_widget(lst)
 
     def fetch_details(self):
         print('started fetching details')
@@ -335,10 +313,10 @@ class MyApp(MDApp):
         self.s_manager.current = 'SongDetailsScreen'
         self.details_screen = self.root.ids.SongDetailsScreen
         self.details_screen.clear_widgets()
-        self.song_name = self.search_data[i]['title']
+        self.song_name = self.search_data[i]['title'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'")
         self.song_id = self.search_data[i]['id']
-        self.artist_name = self.search_data[i]['more_info']['primary_artists']
-        self.album = self.search_data[i]['album']
+        self.artist_name = self.search_data[i]['more_info']['primary_artists'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'")
+        self.album = self.search_data[i]['album'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'")
         self.image_url = self.search_data[i]['image'].replace('50x50', '500x500')
         self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
         self.fetch_thread = threading.Thread(target=self.fetch_details)
