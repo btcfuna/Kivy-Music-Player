@@ -1,14 +1,15 @@
 from kivy import animation
 from kivy.core import audio
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image, AsyncImage, CoreImage
 from kivymd.app import MDApp
 from kivymd.uix.label import MDLabel, MDIcon
-from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFlatButton, MDRectangleFlatIconButton, MDRoundFlatButton, MDFloatingActionButton, MDRaisedButton
+from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFlatButton, MDRectangleFlatIconButton, MDRoundFlatButton, MDFloatingActionButton, MDRaisedButton, MDTextButton
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.list import ImageLeftWidget, TwoLineIconListItem, MDList, IconLeftWidget, TwoLineAvatarListItem, OneLineAvatarListItem
 from kivymd.uix.card import MDCard
-from kivymd.uix.filemanager import MDFileManager
+from filemanager import MDFileManager
 from kivymd.toast import toast
 from kivy.core.window import Window
 from kivy.utils import platform
@@ -22,6 +23,8 @@ from kivy.uix.floatlayout import FloatLayout
 from kivymd.uix.tab import MDTabsBase
 from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
+from kivy.uix.scrollview import ScrollView
+from kivymd.uix.gridlayout import MDGridLayout
 ##############################
 #Window.size = (390, 650)
 from concurrent.futures import ThreadPoolExecutor
@@ -40,7 +43,7 @@ from mutagen.mp4 import MP4, MP4Cover
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3
 from mutagen.easyid3 import EasyID3
-
+from contextlib import closing
 
 if platform == 'android':
     import android
@@ -62,19 +65,19 @@ song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails
 playlist_details_base_url = "https://www.jiosaavn.com/api.php?__call=webapi.get&token={}&type=playlist&p=1&n=20&includeMetaTags=0&ctx=web6dot0&api_version=4&_format=json&_marker=0"
 playlist_ids = {
   "Weekly Top Songs" : "8MT-LQlP35c_",
-  "Weekly Top Jiotunes" : "znKA,YavndBuOxiEGmm6lQ__",
-  "Hindi Top Songs" : "8MT-LQlP35c_",
-  "Hindi Top Jiotunes":"AZNZNH1EwNjfemJ68FuXsA__",
+  "Weekly Top JioTunes" : "znKA,YavndBuOxiEGmm6lQ__",
+  "Hindi - Weekly Top Songs" : "8MT-LQlP35c_",
+  "Hindi - Top JioTunes":"AZNZNH1EwNjfemJ68FuXsA__",
   "English Top Songs" : "LdbVc1Z5i9E_",
-  "English Top Jiotunes" : "xXiMISqMjsrfemJ68FuXsA__",
-  "Punjabi Top Songs":"W6DUe-fP3X8_",
-  "Punjabi Top Jiotunes":"mzDerWPsSwiO0eMLZZxqsA__",
-  "Latest Punjabi Songs":"T,w3Z-u7t6A_",
+  "English - Top JioTunes" : "xXiMISqMjsrfemJ68FuXsA__",
+  "Punjabi - Weekly Top Songs":"W6DUe-fP3X8_",
+  "Punjabi - Top JioTunes":"mzDerWPsSwiO0eMLZZxqsA__",
+  "Latest Punjabi Hits":"T,w3Z-u7t6A_",
   "VYRL Top 20":"zvYYPLOvojJFo9wdEAzFBA__",
   "Pop Mein Top":"pDQtHvJRh4IGSw2I1RxdhQ__",
-  "Haryanvi Top Songs" :"ar5lExlDmbwwkg5tVhI3fw__",
-  "Haryanvi Top Jiotunes":"xgyTegenCljc1EngHtQQ2g__",
-  "Rajasthani Top Songs":"Xm5PW-mxs4c_"
+  "Haryanvi - Weekly Top Songs" :"ar5lExlDmbwwkg5tVhI3fw__",
+  "Haryanvi - Top JioTunes":"xgyTegenCljc1EngHtQQ2g__",
+  "Rajasthani - Weekly Top Songs":"Xm5PW-mxs4c_"
   }
 
 class Tab(FloatLayout, MDTabsBase):
@@ -108,16 +111,16 @@ class MyApp(MDApp):
         self.theme_cls.accent_palette = self.theme_cls.primary_palette
         Loader.loading_image = 'cover.jpg'
         #return Builder.load_string(main)
-        if self.user_data.exists('sync'):
-            if int(time.time()) - int(self.user_data.get('sync')['time']) > 21600:
-                sync_thread = threading.Thread(target=self.get_chart)
-                sync_thread.start()
-                self.user_data.put('sync', time=time.time())
-            else:
-                print('already synced')
-        else:
-            sync_thread = threading.Thread(target=self.get_chart)
-            sync_thread.start()
+        # if self.user_data.exists('sync'):
+        #     if int(time.time()) - int(self.user_data.get('sync')['time']) > 21600:
+        #         sync_thread = threading.Thread(target=self.get_chart)
+        #         sync_thread.start()
+        #         self.user_data.put('sync', time=time.time())
+        #     else:
+        #         print('already synced')
+        # else:
+        #     sync_thread = threading.Thread(target=self.get_chart)
+        #     sync_thread.start()
 
     def tap_target_start(self):
         if self.tap_target_view.state == "close":
@@ -168,8 +171,8 @@ class MyApp(MDApp):
         instance_tab.ids.label.text = tab_text
 
     def get_chart(self):
-        #with open('top_local_chart.csv', 'wb') as f:
-        #    f.write(requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content)
+        with open('top_local_chart.csv', 'wb') as f:
+            f.write(requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content)
 #        with open('top_global_chart.csv', 'wb') as f:
 #            f.write(requests.get("https://spotifycharts.com/regional/global/daily/latest/download").content)
         self.user_data.put('sync', time=time.time())
@@ -189,36 +192,31 @@ class MyApp(MDApp):
         self.add_top_thread.start()
     
     def add_trend(self):
-        executor = ThreadPoolExecutor(max_workers=10)
+        executor = ThreadPoolExecutor(max_workers=5)
         #t1 = threading.Thread(target=self.get_playlist, args=("zvYYPLOvojJFo9wdEAzFBA__",))
         #t1.start()
         if self.root.ids.trend_grid.children == []:
-            print('passed1')
             for key, values in playlist_ids.items():
-                executor.submit(self.get_playlist, values)
+                executor.submit(self.get_playlist, key, values)
         #for i in ["znKA,YavndBuOxiEGmm6lQ__", "8MT-LQlP35c_", "LdbVc1Z5i9E_", "xXiMISqMjsrfemJ68FuXsA__"]:
         #    executor.submit(self.get_playlist, i)
         #executor.shutdown()
 
     def add_songs(self):
-        with requests.get('https://spotifycharts.com/regional/in/daily/latest/download').content.decode() as f:
-        #with open('top_local_chart.csv', newline='') as f:
-            print(f.readline())
-            print(f.readline())
-            for row in f:
-            #    print(row.split(","))
-            #spamreader = csv.read (csvfile, delimiter=',')
-            # for row in f.readlines():
-            #     try:
-            #         pos = int(row[0])
-            #         song_name = row[1]
-            #         art_name = row[2]
-            #         #print('adding {}'.format(pos))
-            #         lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
-            #         lst.add_widget(IconLeftWidget(icon='music-note-outline'))
-            #         self.top_list.add_widget(lst)
-            #     except:
-            #         continue
+        url = 'https://spotifycharts.com/regional/in/daily/latest/download'
+        with closing(requests.get(url, stream=True)) as r:
+            f = (line.decode('utf-8') for line in r.iter_lines())
+            reader = csv.reader(f, delimiter=',', quotechar='"')
+            for row in reader:
+                try:
+                    pos = int(row[0])
+                    song_name = row[1]
+                    art_name = row[2]
+                    lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
+                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
+                    self.top_list.add_widget(lst)
+                except:
+                   continue
         try:
             self.dia.dismiss()
         except:
@@ -236,7 +234,7 @@ class MyApp(MDApp):
     def add_songs_downlist(self):
         for item in os.listdir(self.path):
             lst = OneLineAvatarListItem(text=item, on_press=lambda x, y=item: self.play_song(os.path.join(self.path, y)))
-            lst.add_widget(IconLeftWidget(icon='music'))
+            lst.add_widget(IconLeftWidget(icon='music-note-outline'))
             self.down_list.add_widget(lst)
 
     def show_data(self, query):
@@ -257,6 +255,7 @@ class MyApp(MDApp):
         self.search_data = json.loads(result.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
         for i in range(len(self.search_data)):
             lst = TwoLineAvatarListItem(text=self.search_data[i]['title'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), secondary_text=self.search_data[i]['more_info']['primary_artists'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), on_press=lambda x,y=i: self.song_details(y))
+            lst.add_widget(IconLeftWidget(icon='music-note-outline'))
             self.list_view.add_widget(lst)
         self.dia.dismiss()
 
@@ -288,20 +287,29 @@ class MyApp(MDApp):
         self.root.ids.SongDetailsScreen.add_widget(self.play_stamp)
         print('finished fetching details')
     
-    def get_playlist(self, listId):
-        print('getting playlists')
+    def get_playlist(self, title, listId):
         try:
             response = requests.get(playlist_details_base_url.format(listId))
             if response.status_code == 200:
                 songs_json = response.text.encode().decode('unicode-escape')
                 songs_json = json.loads(songs_json)
-                #print(songs_json['title'])
+                print(songs_json['title'])
                 #print(songs_json['image'])
-                self.root.ids.trend_grid.add_widget(AsyncImage(source=songs_json['image'], size_hint=(None,None), size=(Window.size[0]*0.5, Window.size[0]*0.5), allow_stretch=True))
-                #for items in songs_json['list']:
+                #box = BoxLayout(orientation='vertical')
+                srlv = ScrollView(do_scroll_x=True)
+                gridl = MDGridLayout(rows=1, size_hint_x = 1)
+                image = AsyncImage(source=songs_json['image'], size_hint=(1,1), allow_stretch=True)
+                card = MDCard(orientation='vertical', border_radius= 15, radius= [0,0,15,15], pos_hint={"center_x":0.5, "center_y":0.5}, size_hint=(None, None), size=(Window.size[0]*0.5, Window.size[0]*0.6))
+                card.add_widget(image)
+                card.add_widget(MDTextButton(text=title, pos_hint= {'center_x':0.5}, on_press=lambda x: print(listId)))
+                #gridl.add_widget(card)
+                #srlv.add_widget(gridl)
+                #box.add_widget(srlv)
+                self.root.ids.trend_grid.add_widget(card)
+                for items in songs_json['list']:
                 #    items['id']
-                #    print(items['title'])
-                #    print(items['subtitle'])
+                    print(items['title'])
+                    print(items['subtitle'])
                     #items['image']
         except Exception as e:
             print(e)
@@ -330,10 +338,10 @@ class MyApp(MDApp):
         self.fetch_thread.start()
         self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
         song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True)
-        card = MDCard(orientation='vertical', border_radius= 20, radius= [15], pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
+        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
         card.add_widget(song_image)
         self.details_screen.add_widget(card)
-        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.825}))
+        self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.84}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
         self.heart_icon = MDIconButton(icon='heart-outline', user_font_size="30sp", theme_text_color= 'Secondary', pos_hint={"center_x":0.1, "center_y":0.15}, on_press=lambda x: self.add_fav())

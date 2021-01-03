@@ -15,7 +15,7 @@ NavigationLayout:
                     icon: 'magnify'
                     MDIconButton:
                         icon: 'music'
-                        pos_hint: {"center_x":0.5, "center_y":0.75}
+                        pos_hint: {"center_x":0.5, "center_y":0.7}
                         theme_text_color: "Custom"
                         text_color: app.theme_cls.primary_color
                         user_font_size: "300sp"
@@ -25,7 +25,7 @@ NavigationLayout:
                         on_press: nav_drawer.set_state("open")
                     MDCard:
                         size_hint: None, None
-                        pos_hint: {'center_x':0.5, 'center_y':0.5}
+                        pos_hint: {'center_x':0.5, 'center_y':0.4}
                         size_hint: 0.7,0.06
                         elevation: 8
                         radius: [10,]
@@ -34,7 +34,7 @@ NavigationLayout:
                         id: song_name
                         hint_text: "Songs, artists or podcasts"
                         helper_text: "Enter song name here"
-                        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                        pos_hint: {'center_x': 0.5, 'center_y': 0.4}
                         size_hint: 0.6, 0.05
                         line_color: app.theme_cls.bg_light
                         normal_color: app.theme_cls.bg_light
@@ -47,7 +47,7 @@ NavigationLayout:
 
                     MDCard:
                         size_hint: None, None
-                        pos_hint: {'center_x':0.5, 'center_y':0.4}
+                        pos_hint: {'center_x':0.5, 'center_y':0.3}
                         size : search_btn.size
                         elevation: 10
                         radius:[3,]
@@ -66,10 +66,14 @@ NavigationLayout:
                     icon: 'trending-up'
                     on_tab_press: app.add_trend()
                     ScrollView:
-                        size_hint: (1, 2.5)
                         MDGridLayout:
-                            cols: 2
                             id: trend_grid
+                            cols: 1
+                            padding: 20
+                            spacing: 30
+                            size_hint_y: None
+                            height: self.minimum_height
+                            
                     
                 MDBottomNavigationItem:
                     name: 'top'
@@ -188,7 +192,7 @@ NavigationLayout:
                         theme_text_color: 'Primary'
                         pos_hint: {'center_y': 0.5}
                     MDTextButton:
-                        text: "Beta v"+app.__version__
+                        text: "v"+app.__version__ + "-alpha"
                         padding_x: "30dp"
                         custom_color: app.theme_cls.secondary_text_color
                         pos_hint: {'center_x':0.9, 'center_y': 0.5}
