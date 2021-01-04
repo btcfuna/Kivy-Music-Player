@@ -1,3 +1,4 @@
+#:import toast kivymd.toast.toast
 
 NavigationLayout:
     ScreenManager:
@@ -70,7 +71,7 @@ NavigationLayout:
                             id: trend_grid
                             cols: 1
                             padding: 20
-                            spacing: 30
+                            spacing: 10
                             size_hint_y: None
                             height: self.minimum_height
                             
@@ -100,8 +101,24 @@ NavigationLayout:
                     size_hint: (1, 2.5)
                     MDList:
                         id: container
+        
+        Screen:
+            id: TrendListScreen
+            name: 'TrendListScreen'
+            BoxLayout:
+                orientation: 'vertical'
+
+                MDToolbar:
+                    id: trend_toolbar
+                    title: ''
+                    elevation: 10
+                    left_action_items: [['chevron-left', lambda x: app.change_screen('MainScreen', 'right')]]
+
+                ScrollView:
+                    size_hint: (1, 2.5)
+                    MDList:
+                        id: trend_list
                 
-                Widget:
         
         Screen:
             id: SongDetailsScreen
@@ -196,6 +213,7 @@ NavigationLayout:
                         padding_x: "30dp"
                         custom_color: app.theme_cls.secondary_text_color
                         pos_hint: {'center_x':0.9, 'center_y': 0.5}
+                        on_press: toast("Alpha v0.7")
                     MDLabel:
                         text: "Download location"
                         padding_x: "30dp"
@@ -207,6 +225,12 @@ NavigationLayout:
                         custom_color: app.theme_cls.secondary_text_color
                         pos_hint: {'center_x':0.9, 'center_y': 0.7}
                         on_press: app.file_manager_open()
+                    MDTextButton:
+                        text: "Check for Update"
+                        padding_x: "30dp"
+                        custom_color: app.theme_cls.text_color
+                        pos_hint: {'center_y': 0.3}
+                        on_press: app.check_update()
 
 
     MDNavigationDrawer:

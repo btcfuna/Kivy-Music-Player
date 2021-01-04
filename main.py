@@ -60,6 +60,8 @@ if platform == 'android':
     argument = ''
     service.start(mActivity, argument)
 
+win_size = min(Window.size)
+
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
 playlist_details_base_url = "https://www.jiosaavn.com/api.php?__call=webapi.get&token={}&type=playlist&p=1&n=20&includeMetaTags=0&ctx=web6dot0&api_version=4&_format=json&_marker=0"
@@ -169,6 +171,9 @@ class MyApp(MDApp):
         self, instance_tabs, instance_tab, instance_tab_label, tab_text
     ):
         instance_tab.ids.label.text = tab_text
+
+    def check_update(self):
+        webbrowser.open_new('https://github.com/Sangwan5688/Black_Hole-music_downloader')
 
     def get_chart(self):
         with open('top_local_chart.csv', 'wb') as f:
@@ -293,27 +298,48 @@ class MyApp(MDApp):
             if response.status_code == 200:
                 songs_json = response.text.encode().decode('unicode-escape')
                 songs_json = json.loads(songs_json)
-                print(songs_json['title'])
                 #print(songs_json['image'])
-                #box = BoxLayout(orientation='vertical')
-                srlv = ScrollView(do_scroll_x=True)
-                gridl = MDGridLayout(rows=1, size_hint_x = 1)
-                image = AsyncImage(source=songs_json['image'], size_hint=(1,1), allow_stretch=True)
-                card = MDCard(orientation='vertical', border_radius= 15, radius= [0,0,15,15], pos_hint={"center_x":0.5, "center_y":0.5}, size_hint=(None, None), size=(Window.size[0]*0.5, Window.size[0]*0.6))
+                box = BoxLayout(orientation='vertical', size_hint=(0.5,0.5))
+                #srlv = ScrollView(do_scroll_x=True)
+                #gridl = MDGridLayout(rows=1, size_hint_x = 1)
+                image = AsyncImage(source=songs_json['image'], size_hint=(1,1), pos_hint={'top':0.9}, allow_stretch=True)
+                card = MDCard(orientation='vertical', border_radius= 15, radius= [0,0,15,15], pos_hint={"center_x":0.5, "center_y":0.5}, size_hint=(None, None), size=(win_size*0.3, win_size*0.3))
                 card.add_widget(image)
-                card.add_widget(MDTextButton(text=title, pos_hint= {'center_x':0.5}, on_press=lambda x: print(listId)))
-                #gridl.add_widget(card)
-                #srlv.add_widget(gridl)
-                #box.add_widget(srlv)
+                self.root.ids.trend_grid.add_widget(MDTextButton(text=title, pos_hint= {'center_x':0.5}, on_press=lambda x: self.show_top(title, listId)))
                 self.root.ids.trend_grid.add_widget(card)
-                for items in songs_json['list']:
+                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+                #self.root.ids.trend_grid.add_widget(box)
+                #for items in songs_json['list']:
+                    #print(items)
                 #    items['id']
-                    print(items['title'])
-                    print(items['subtitle'])
-                    #items['image']
+                #    lst = TwoLineAvatarListItem(text=items['title'], secondary_text=items['subtitle'], on_press=lambda x, y=items['title']: self.show_data(y))
+                    
         except Exception as e:
             print(e)
         
+    def show_top(self, ttl, Id):
+        self.tlist = self.root.ids.trend_list
+        self.root.ids.trend_toolbar.title = ttl
+        self.tlist.clear_widgets()
+        try:
+            response = requests.get(playlist_details_base_url.format(Id))
+            if response.status_code == 200:
+                songs_json = response.text.encode().decode()
+                songs_json = json.loads(songs_json)
+                self.search_data = songs_json['list']
+                for i in range(int(len(songs_json['list']))):
+                    #print(items['id'])
+                    print(i)
+                    print(songs_json['list'][i]['title'])
+                    lst = TwoLineAvatarListItem(text=songs_json['list'][i]['title'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), secondary_text=songs_json['list'][i]['subtitle'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), on_press=lambda x,y=i: self.song_details(y))
+                    lst.add_widget(IconLeftWidget(icon='music-note-outline'))
+                    self.tlist.add_widget(lst)
+            self.change_screen('TrendListScreen', 'left')
+        except Exception as e:
+            print(e)
 
     def decrypt_url(url):
         des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0",pad=None, padmode=PAD_PKCS5)
@@ -330,15 +356,18 @@ class MyApp(MDApp):
         self.details_screen.clear_widgets()
         self.song_name = self.search_data[i]['title'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'")
         self.song_id = self.search_data[i]['id']
-        self.artist_name = self.search_data[i]['more_info']['primary_artists'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'")
-        self.album = self.search_data[i]['album'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'")
-        self.image_url = self.search_data[i]['image'].replace('50x50', '500x500')
+        try:
+            self.artist_name = self.search_data[i]['more_info']['primary_artists'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'")
+            self.album = self.search_data[i]['album'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'")
+        except:
+            self.artist_name = self.search_data[i]['subtitle']
+        self.image_url = self.search_data[i]['image'].replace('50x50', '500x500').replace('150x150', '500x500')
         self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
         self.fetch_thread = threading.Thread(target=self.fetch_details)
         self.fetch_thread.start()
         self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
         song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True)
-        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
+        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(win_size*0.9, win_size*0.9))
         card.add_widget(song_image)
         self.details_screen.add_widget(card)
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.84}))
@@ -434,7 +463,6 @@ class MyApp(MDApp):
             time.sleep(1)
             self.play_stamp.text = self.convert_sec(self.sound.get_pos())
             if self.sound.state == 'stop':
-                print('breaked loop')
                 break
 
     def play_song(self, link):
@@ -474,22 +502,23 @@ class MyApp(MDApp):
         song_image.texture= img
         self.root.ids.PlayScreen.clear_widgets()
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'right')))
-        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(Window.size[0]*0.9, Window.size[0]*0.9))
+        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(win_size*0.9, win_size*0.9))
         card.add_widget(song_image)
         self.root.ids.PlayScreen.add_widget(card)
-        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_song_name, halign='center', theme_text_color='Primary', font_style='H4', bold=True, pos_hint={"top":0.85}))
+        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.85}))
         self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_art_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.9, value = 0, color = self.theme_cls.primary_color)
         self.root.ids.PlayScreen.add_widget(self.play_progress)
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.rewind()))
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.forward()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .85, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.increase()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .15, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.decrease()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .85, "center_y": .15}, user_font_size="30sp", theme_text_color= 'Secondary', on_release=lambda x: self.increase()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .15, "center_y": .15}, user_font_size="30sp", theme_text_color= 'Secondary',on_release=lambda x: self.decrease()))
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_offline())
         self.root.ids.PlayScreen.add_widget(self.play_btn)
         self.root.ids.PlayScreen.add_widget(MDLabel(text=self.convert_sec(self.sound.length), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
         self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.get_pos()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
         self.root.ids.PlayScreen.add_widget(self.play_stamp)
+        self.play_song_offline()
 
             
     def play_song_offline(self):
