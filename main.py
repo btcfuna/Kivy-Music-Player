@@ -76,10 +76,8 @@ playlist_ids = {
   "Punjabi - Top JioTunes":"mzDerWPsSwiO0eMLZZxqsA__",
   "Latest Punjabi Hits":"T,w3Z-u7t6A_",
   "VYRL Top 20":"zvYYPLOvojJFo9wdEAzFBA__",
-  "Pop Mein Top":"pDQtHvJRh4IGSw2I1RxdhQ__",
   "Haryanvi - Weekly Top Songs" :"ar5lExlDmbwwkg5tVhI3fw__",
   "Haryanvi - Top JioTunes":"xgyTegenCljc1EngHtQQ2g__",
-  "Rajasthani - Weekly Top Songs":"Xm5PW-mxs4c_"
   }
 
 class Tab(FloatLayout, MDTabsBase):
@@ -89,7 +87,7 @@ class MyApp(MDApp):
     title = "Black Hole"
     __version__ = "0.7"
     status = True
-    last_screen = 'MainScreen'
+    last_screen = []
 
 #    def on_start(self):
 #        self.root.ids.tabs.add_widget(Tab(text='Local'))
@@ -197,12 +195,22 @@ class MyApp(MDApp):
         self.add_top_thread.start()
     
     def add_trend(self):
-        executor = ThreadPoolExecutor(max_workers=5)
+        #executor = ThreadPoolExecutor(max_workers=5)
         #t1 = threading.Thread(target=self.get_playlist, args=("zvYYPLOvojJFo9wdEAzFBA__",))
         #t1.start()
+        Clock.schedule_once(self.trend_thread)
+        self.dia = MDDialog(text="Loading trending songs", size_hint=(0.7,1))
+        self.dia.open()
+    
+    def trend_thread(self, *args):
+        self.add_trend_thread=threading.Thread(target=self.add_trend2)
+        self.add_trend_thread.start()
+    
+    def add_trend2(self):
         if self.root.ids.trend_grid.children == []:
             for key, values in playlist_ids.items():
-                executor.submit(self.get_playlist, key, values)
+                self.get_playlist(key, values)
+        self.dia.dismiss()
         #for i in ["znKA,YavndBuOxiEGmm6lQ__", "8MT-LQlP35c_", "LdbVc1Z5i9E_", "xXiMISqMjsrfemJ68FuXsA__"]:
         #    executor.submit(self.get_playlist, i)
         #executor.shutdown()
@@ -237,8 +245,9 @@ class MyApp(MDApp):
         td.start()
     
     def add_songs_downlist(self):
-        for item in os.listdir(self.path):
-            lst = OneLineAvatarListItem(text=item, on_press=lambda x, y=item: self.play_song(os.path.join(self.path, y)))
+        self.down_path_list = os.listdir(self.path)
+        for i in range(len(self.down_path_list)):
+            lst = OneLineAvatarListItem(text=self.down_path_list[i], on_press=lambda x, y=i: self.play_song(y))
             lst.add_widget(IconLeftWidget(icon='music-note-outline'))
             self.down_list.add_widget(lst)
 
@@ -249,7 +258,7 @@ class MyApp(MDApp):
             self.dia.open()
         
         else:
-            self.change_screen('SongListScreen', 'left')
+            self.change_screen('SongListScreen')
             self.dia = MDDialog(text="Searching for songs ...", size_hint=(0.7,1))
             self.list_view = self.root.ids.container
             self.list_view.clear_widgets()
@@ -296,31 +305,42 @@ class MyApp(MDApp):
         try:
             response = requests.get(playlist_details_base_url.format(listId))
             if response.status_code == 200:
-                songs_json = response.text.encode().decode('unicode-escape')
+                songs_json = response.text.encode().decode('utf-8')
                 songs_json = json.loads(songs_json)
-                #print(songs_json['image'])
-                box = BoxLayout(orientation='vertical', size_hint=(0.5,0.5))
-                #srlv = ScrollView(do_scroll_x=True)
-                #gridl = MDGridLayout(rows=1, size_hint_x = 1)
+                #box = FloatLayout(size_hint=(1,1))
+                #srlv = ScrollView()
+                #lst_vw = MDList()
                 image = AsyncImage(source=songs_json['image'], size_hint=(1,1), pos_hint={'top':0.9}, allow_stretch=True)
                 card = MDCard(orientation='vertical', border_radius= 15, radius= [0,0,15,15], pos_hint={"center_x":0.5, "center_y":0.5}, size_hint=(None, None), size=(win_size*0.3, win_size*0.3))
                 card.add_widget(image)
                 self.root.ids.trend_grid.add_widget(MDTextButton(text=title, pos_hint= {'center_x':0.5}, on_press=lambda x: self.show_top(title, listId)))
                 self.root.ids.trend_grid.add_widget(card)
-                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
-                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
-                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
-                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
                 #self.root.ids.trend_grid.add_widget(box)
-                #for items in songs_json['list']:
+                #for i in range(int(len(songs_json['list']))):
                     #print(items)
                 #    items['id']
-                #    lst = TwoLineAvatarListItem(text=items['title'], secondary_text=items['subtitle'], on_press=lambda x, y=items['title']: self.show_data(y))
+                #    lt = TwoLineAvatarListItem(text=songs_json['list'][i]['title'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), secondary_text=songs_json['list'][i]['subtitle'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), on_press=lambda x,y=i: self.song_details(y))
+                    #lst_vw.add_widget(lt)
+                #srlv.add_widget(lst_vw)
+                #print(srlv)
+                #box.add_widget(srlv)
+                #self.root.ids.trend_grid.add_widget(box)
+                #print(self.root.ids.trend_grid.children)
+                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
                     
         except Exception as e:
             print(e)
         
     def show_top(self, ttl, Id):
+        self.dia = MDDialog(text="Loading {}".format(ttl), size_hint=(0.7,1))
+        self.dia.open()
+        t3 = threading.Thread(target=self.show_top2, args=(ttl,Id))
+        t3.start()
+
+    def show_top2(self, ttl, Id):
         self.tlist = self.root.ids.trend_list
         self.root.ids.trend_toolbar.title = ttl
         self.tlist.clear_widgets()
@@ -332,14 +352,15 @@ class MyApp(MDApp):
                 self.search_data = songs_json['list']
                 for i in range(int(len(songs_json['list']))):
                     #print(items['id'])
-                    print(i)
-                    print(songs_json['list'][i]['title'])
+                    #print(i)
+                    #print(songs_json['list'][i]['title'])
                     lst = TwoLineAvatarListItem(text=songs_json['list'][i]['title'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), secondary_text=songs_json['list'][i]['subtitle'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), on_press=lambda x,y=i: self.song_details(y))
                     lst.add_widget(IconLeftWidget(icon='music-note-outline'))
                     self.tlist.add_widget(lst)
-            self.change_screen('TrendListScreen', 'left')
+            self.change_screen('TrendListScreen')
         except Exception as e:
             print(e)
+        self.dia.dismiss()
 
     def decrypt_url(url):
         des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0",pad=None, padmode=PAD_PKCS5)
@@ -350,8 +371,7 @@ class MyApp(MDApp):
 
     def song_details(self, i):
         self.s_manager = self.root.ids.screen_manager
-        self.s_manager.transition.direction = 'left'
-        self.s_manager.current = 'SongDetailsScreen'
+        self.change_screen('SongDetailsScreen')
         self.details_screen = self.root.ids.SongDetailsScreen
         self.details_screen.clear_widgets()
         self.song_name = self.search_data[i]['title'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'")
@@ -365,7 +385,7 @@ class MyApp(MDApp):
         self.image_path = os.path.join(self.data_path,self.song_id+'.jpg')
         self.fetch_thread = threading.Thread(target=self.fetch_details)
         self.fetch_thread.start()
-        self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('SongListScreen', 'right')))
+        self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.back_screen()))
         song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True)
         card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(win_size*0.9, win_size*0.9))
         card.add_widget(song_image)
@@ -404,13 +424,24 @@ class MyApp(MDApp):
             #self.heart_icon.text_color = self.theme_cls.text_color
             toast("Removed from Favorites")
 
-    def change_screen(self, screen, direction):
-        self.last_screen = self.root.ids.screen_manager.current
-        self.root.ids.screen_manager.transition.direction = direction
-        self.root.ids.screen_manager.current = screen
-        if self.last_screen == 'SongDetailsScreen' or self.last_screen == 'PlayScreen':
+    def change_screen(self, screen, *args):
+        if self.root.ids.screen_manager.current == 'SongDetailsScreen' or self.root.ids.screen_manager.current == 'PlayScreen':
             if self.sound.status == 'play':
                 self.sound.stop()
+        if args:
+            self.root.ids.screen_manager.transition.direction = args[0]
+            if args[0] != 'right':
+                self.last_screen.append(self.root.ids.screen_manager.current)
+                
+        else:
+            self.root.ids.screen_manager.transition.direction = 'left'
+            self.last_screen.append(self.root.ids.screen_manager.current)
+        self.root.ids.screen_manager.current = screen
+    
+    def back_screen(self):
+        if self.root.ids.screen_manager.current != 'MainScreen':
+            self.change_screen(self.last_screen[-1], 'right')
+            self.last_screen.pop(-1)
     
     def cancel(self):
         self.download_progress.color = 1, 0, 0, 1
@@ -465,8 +496,14 @@ class MyApp(MDApp):
             if self.sound.state == 'stop':
                 break
 
-    def play_song(self, link):
-        self.change_screen("PlayScreen", "left")
+    def play_song(self, i):
+        try:
+            self.sound.stop()
+        except:
+            pass
+        link = os.path.join(self.path, self.down_path_list[i])
+        if self.root.ids.screen_manager.current != 'PlayScreen':
+            self.change_screen("PlayScreen")
         self.sound = SoundLoader.load(link)
         if link.endswith('.m4a'):
             self.audio = MP4(link)
@@ -501,16 +538,18 @@ class MyApp(MDApp):
         song_image= Image(allow_stretch=True)
         song_image.texture= img
         self.root.ids.PlayScreen.clear_widgets()
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.change_screen('DownloadsScreen', 'right')))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.back_screen()))
         card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(win_size*0.9, win_size*0.9))
         card.add_widget(song_image)
         self.root.ids.PlayScreen.add_widget(card)
-        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.85}))
+        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.84}))
         self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_art_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.9, value = 0, color = self.theme_cls.primary_color)
         self.root.ids.PlayScreen.add_widget(self.play_progress)
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.rewind()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.forward()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .275, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.rewind()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .725, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.forward()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="skip-next", pos_hint={"center_x": .6, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i+1)))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="skip-previous", pos_hint={"center_x": .4, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i-1)))
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .85, "center_y": .15}, user_font_size="30sp", theme_text_color= 'Secondary', on_release=lambda x: self.increase()))
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .15, "center_y": .15}, user_font_size="30sp", theme_text_color= 'Secondary',on_release=lambda x: self.decrease()))
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_offline())
@@ -563,13 +602,6 @@ class MyApp(MDApp):
         self.sound.volume += 0.2
     def decrease(self):
         self.sound.volume -= 0.2
-    #def stop_song(self):
-    #    self.sound.stop()
-    #    if self.last_screen == 'DownloadsScreen':
-    #        self.change_screen('DownloadsScreen', 'right')
-    #    else:
-    #        self.change_screen(self.last_screen, 'right')
-    #    self.root.ids.PlayScreen.remove_widget(self.title_play_label)
 
     def save_settings(self):
         toast("Settings saved")
@@ -650,7 +682,6 @@ class MyApp(MDApp):
 
     def set_nav_color(self, item):
         for child in self.root.ids.nav_list.children:
-            print(child.text)
             #if child.text_color == self.theme_cls.primary_color:
             #    child.text_color = self.theme_cls.text_color
             #    break
@@ -682,13 +713,8 @@ class MyApp(MDApp):
         if keyboard in (1001, 27):
             if self.manager_open:
                 self.file_manager.back()
-        if keyboard == 27:
-            if self.root.ids.screen_manager.current == 'SongDetailsScreen':
-                self.change_screen('SongListScreen', 'right')
-            elif self.root.ids.screen_manager.current == 'PlayScreen':
-                self.change_screen('DownloadsScreen', 'right')
             else:
-                self.change_screen('MainScreen', 'right')
+                self.back_screen()
         if keyboard == 13:
             if self.root.ids.screen_manager.current == 'MainScreen':
                 self.show_data(self.root.ids.song_name.text)
