@@ -1,19 +1,16 @@
-from kivy import animation
-from kivy.core import audio
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image, AsyncImage, CoreImage
 from kivymd.app import MDApp
-from kivymd.uix.label import MDLabel, MDIcon
-from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFlatButton, MDRectangleFlatIconButton, MDRoundFlatButton, MDFloatingActionButton, MDRaisedButton, MDTextButton
+from kivymd.uix.label import MDLabel
+from kivymd.uix.button import MDIconButton, MDFlatButton, MDFloatingActionButton, MDTextButton
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.progressbar import MDProgressBar
-from kivymd.uix.list import ImageLeftWidget, TwoLineIconListItem, MDList, IconLeftWidget, TwoLineAvatarListItem, OneLineAvatarListItem
+from kivymd.uix.list import IconLeftWidget, TwoLineAvatarListItem, OneLineAvatarListItem
 from kivymd.uix.card import MDCard
 from filemanager import MDFileManager
 from kivymd.toast import toast
 from kivy.core.window import Window
 from kivy.utils import platform
-from kivy.core.audio import SoundLoader
 from kivymd.uix.bottomsheet import MDGridBottomSheet
 from kivymd.uix.taptargetview import MDTapTargetView
 from kivy.storage.jsonstore import JsonStore
@@ -23,11 +20,9 @@ from kivy.uix.floatlayout import FloatLayout
 from kivymd.uix.tab import MDTabsBase
 from kivy.clock import Clock
 from kivy.network.urlrequest import UrlRequest
-from kivy.uix.scrollview import ScrollView
-from kivymd.uix.gridlayout import MDGridLayout
 ##############################
 #Window.size = (390, 650)
-from concurrent.futures import ThreadPoolExecutor
+#from concurrent.futures import ThreadPoolExecutor
 import threading
 import requests
 import base64
@@ -51,14 +46,8 @@ if platform == 'android':
     request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
     from plyer import notification
     from jnius import autoclass
-    SERVICE_NAME = u'{packagename}.Service{servicename}'.format(
-        packagename=u'org.black.black',
-        servicename=u'Myservice'
-    )
-    service = autoclass(SERVICE_NAME)
-    mActivity = autoclass(u'org.kivy.android.PythonActivity').mActivity
-    argument = ''
-    service.start(mActivity, argument)
+    MediaPlayer = autoclass('android.media.MediaPlayer')
+    AudioManager = autoclass('android.media.AudioManager')
 
 win_size = min(Window.size)
 
@@ -87,6 +76,7 @@ class MyApp(MDApp):
     title = "Black Hole"
     __version__ = "0.7"
     status = True
+    play_status = 'stop'
     last_screen = []
 
 #    def on_start(self):
@@ -295,9 +285,9 @@ class MyApp(MDApp):
         self.featured_artist = self.song_data["featured_artists"]
         self.year = self.song_data["year"]
         self.genre = (self.song_data["language"]).capitalize()
-        self.sound = SoundLoader.load(self.song_dwn_url)
-        self.root.ids.SongDetailsScreen.add_widget(MDLabel(text=self.convert_sec(self.sound.length), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
-        self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.get_pos()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
+        self.prepare(self.song_dwn_url)
+        self.root.ids.SongDetailsScreen.add_widget(MDLabel(text=self.convert_sec(self.sound.getDuration()), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
+        self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.getCurrentPosition()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
         self.root.ids.SongDetailsScreen.add_widget(self.play_stamp)
         print('finished fetching details')
     
@@ -426,8 +416,10 @@ class MyApp(MDApp):
 
     def change_screen(self, screen, *args):
         if self.root.ids.screen_manager.current == 'SongDetailsScreen' or self.root.ids.screen_manager.current == 'PlayScreen':
-            if self.sound.status == 'play':
-                self.sound.stop()
+            try:
+                self.stop()
+            except:
+                pass
         if args:
             self.root.ids.screen_manager.transition.direction = args[0]
             if args[0] != 'right':
@@ -474,37 +466,37 @@ class MyApp(MDApp):
         if self.sound:
             #print("Sound found at %s" % self.sound.source)
             #print("Sound is %.3f seconds" % self.sound.length)
-            if self.sound.state == 'stop':
+            if self.play_status == 'pause':
                 self.play_btn.icon = 'pause'
-                self.sound.play()
-                lnth = self.sound.length
+                self.play()
+                lnth = self.sound.getDuration()
                 t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
                 t2.start()
-            elif self.sound.state == 'play':
+            elif self.play_status == 'play':
                 self.play_btn.icon = 'play'
-                self.sound.stop()
+                self.pause()
         else:
             time.sleep(0.5)
             self.play_song_online
     
     def online_play_bar(self, length):
         while True:
-            self.play_progress.value = 100*(self.sound.get_pos())/length
+            self.play_progress.value = 100*(self.sound.getCurrentPosition())/length
             #print(self.progress.value)
             time.sleep(1)
-            self.play_stamp.text = self.convert_sec(self.sound.get_pos())
-            if self.sound.state == 'stop':
+            self.play_stamp.text = self.convert_sec(self.sound.getCurrentPosition())
+            if self.play_status == 'stop':
                 break
 
     def play_song(self, i):
         try:
-            self.sound.stop()
+            self.stop()
         except:
             pass
         link = os.path.join(self.path, self.down_path_list[i])
         if self.root.ids.screen_manager.current != 'PlayScreen':
             self.change_screen("PlayScreen")
-        self.sound = SoundLoader.load(link)
+        self.prepare(link)
         if link.endswith('.m4a'):
             self.audio = MP4(link)
             self.play_song_name = self.audio.get('\xa9nam', ['Unknown'])[0]
@@ -546,16 +538,16 @@ class MyApp(MDApp):
         self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_art_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
         self.play_progress = MDProgressBar(pos_hint = {'center_x':0.5, 'center_y':0.25}, size_hint_x = 0.9, value = 0, color = self.theme_cls.primary_color)
         self.root.ids.PlayScreen.add_widget(self.play_progress)
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .175, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.rewind()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .825, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.forward()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="skip-next", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i+1)))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="skip-previous", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i-1)))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .2, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.rewind()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .8, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.forward()))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="skip-next", pos_hint={"center_x": .65, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i+1)))
+        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="skip-previous", pos_hint={"center_x": .35, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i-1)))
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-plus", pos_hint={"center_x": .9, "center_y": .15}, user_font_size="30sp", theme_text_color= 'Secondary', on_release=lambda x: self.increase()))
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon="volume-minus", pos_hint={"center_x": .1, "center_y": .15}, user_font_size="30sp", theme_text_color= 'Secondary',on_release=lambda x: self.decrease()))
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_offline())
         self.root.ids.PlayScreen.add_widget(self.play_btn)
-        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.convert_sec(self.sound.length), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
-        self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.get_pos()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
+        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.convert_sec(self.sound.getDuration()), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
+        self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.getCurrentPosition()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
         self.root.ids.PlayScreen.add_widget(self.play_stamp)
         self.play_song_offline()
 
@@ -564,15 +556,15 @@ class MyApp(MDApp):
         if self.sound:
             #print("Sound found at %s" % self.sound.source)
             #print("Sound is %.3f seconds" % self.sound.length)
-            if self.sound.state == 'stop':
+            if self.play_status == 'pause':
                 self.play_btn.icon = 'pause'
-                self.sound.play()
-                lnth = self.sound.length
+                self.play()
+                lnth = self.sound.getCurrentPosition()
                 t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
                 t2.start()
-            elif self.sound.state == 'play':
+            elif self.play_status == 'play':
                 self.play_btn.icon = 'play'
-                self.sound.stop()
+                self.pause()
         else:
             time.sleep(0.5)
             self.play_song_offline
@@ -586,25 +578,25 @@ class MyApp(MDApp):
         except:
             print('Error: Length is {}'.format(lnth))
 
+    def prepare(self, link):
+        self.sound = MediaPlayer()
+        self.sound.setDataSource(link)
+        self.sound.prepare()
+        self.sound.setLooping(False)
     def play(self):
-        if self.sound:
-            self.sound.play()
+        self.sound.start()
+        self.play_status = 'play'
     def pause(self):
-    	if self.sound:
-        	self.sound.stop()
+        self.sound.pause()
+        self.play_status = 'pause'
+    def stop(self):
+        self.sound.stop()
+        self.sound.release()
+        self.play_status = 'stop'
     def forward(self):
-        if self.sound:
-            self.sound.seek(self.sound.get_pos() + 10)
+        self.sound.seekTo(self.nowPlaying.getCurrentPosition() + 10)
     def rewind(self):
-        if self.sound.get_pos() >= 5:
-            self.sound.seek(self.sound.get_pos() - 10)
-    def increase(self):
-        self.sound.volume += 0.2
-    def decrease(self):
-        self.sound.volume -= 0.2
-
-    def save_settings(self):
-        toast("Settings saved")
+        self.sound.seekTo(self.nowPlaying.getCurrentPosition() - 10)
     
     def callback_for_about(self, *args):
         toast('Opening ' + args[0])
@@ -628,8 +620,6 @@ class MyApp(MDApp):
         bottom_sheet_menu.open()
 
     def download_song(self):
-        #if self.status:
-        #    self.fetch_details()
         if self.status:
             print('started downloading song')
             fname = "{}/{} - {}.m4a".format(self.data_path, self.song_name, self.artist_name)

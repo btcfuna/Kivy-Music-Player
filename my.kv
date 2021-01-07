@@ -82,15 +82,8 @@ NavigationLayout:
                     icon: 'chart-line'
                     on_tab_press: app.add_top()
                     id: rv
-                    RecycleView:
-                        id: rv
-                        viewclass: 'Label'
-                        RecycleBoxLayout:
-                            default_size: None, dp(56)
-                            default_size_hint: 1, None
-                            size_hint_y: None
-                            height: self.minimum_height
-                            orientation: 'vertical'
+                    ScrollView:
+                        MDList:
                             id: top_list
 
 
