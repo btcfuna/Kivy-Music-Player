@@ -556,7 +556,7 @@ class MyApp(MDApp):
             if self.play_status == 'pause' or self.play_status == 'stop':
                 self.play_btn.icon = 'pause'
                 self.play()
-                lnth = self.sound.getCurrentPosition()
+                lnth = self.sound.getDuration()
                 t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
                 t2.start()
             elif self.play_status == 'play':
