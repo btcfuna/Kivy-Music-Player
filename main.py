@@ -134,14 +134,14 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.user_data_path = 'data.json'#os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
         self.user_data = JsonStore(self.user_data_path)
         Window.bind(on_keyboard=self.events)
         if self.user_data.exists('download_path'):
             self.path = self.user_data.get('download_path')['path']
         else:
-            self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
+            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = os.path.join(self.user_data_dir, 'cache')
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -489,10 +489,10 @@ class MyApp(MDApp):
             #print(self.progress.value)
             time.sleep(1)
             self.play_stamp.text = self.convert_sec(self.sound.getCurrentPosition())
-            if self.soung.getCurrentPosition() == length and args:
-                self.play_song(args[0]+1)
             if self.play_status == 'stop':
                 break
+            if self.play_stamp.text == self.length_stamp.text:
+                self.play_song(args[0]+1)
 
     def play_song(self, i):
         try:
@@ -550,9 +550,10 @@ class MyApp(MDApp):
         self.root.ids.PlayScreen.add_widget(self.next_button)
         self.previous_button = (MDIconButton(icon="skip-previous", pos_hint={"center_x": .35, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i-1)))
         self.root.ids.PlayScreen.add_widget(self.previous_button)
-        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_offline())
+        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_offline(i))
         self.root.ids.PlayScreen.add_widget(self.play_btn)
-        self.root.ids.PlayScreen.add_widget(MDLabel(text=self.convert_sec(self.sound.getDuration()), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
+        self.length_stamp = MDLabel(text=self.convert_sec(self.sound.getDuration()), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725})
+        self.root.ids.PlayScreen.add_widget(self.length_stamp)
         self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.getCurrentPosition()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
         self.root.ids.PlayScreen.add_widget(self.play_stamp)
         self.play_song_offline(i)
