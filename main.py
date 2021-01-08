@@ -252,9 +252,13 @@ class MyApp(MDApp):
         td.start()
     
     def add_songs_downlist(self):
-        self.down_path_list = os.listdir(self.path)
+        self.down_path_list = []
+        for root, dirs, files in os.walk(os.getenv('EXTERNAL_STORAGE')):
+            for filename in files:
+                if os.path.splitext(filename)[1] in [".mp3", ".m4a", ".mp4", ".ogg", ".wav"]:
+                    self.down_path_list.append((os.path.join(root, filename), filename))
         for i in range(len(self.down_path_list)):
-            lst = OneLineAvatarListItem(text=self.down_path_list[i], on_press=lambda x, y=i: self.play_song(y))
+            lst = OneLineAvatarListItem(text=self.down_path_list[i][1], on_press=lambda x, y=i: self.play_song(y))
             lst.add_widget(IconLeftWidget(icon='music-note-outline'))
             self.down_list.add_widget(lst)
 
@@ -493,7 +497,7 @@ class MyApp(MDApp):
             self.stop()
         except:
             pass
-        link = os.path.join(self.path, self.down_path_list[i])
+        link = self.down_path_list[i][0]
         if self.root.ids.screen_manager.current != 'PlayScreen':
             self.change_screen("PlayScreen")
         self.prepare(link)
