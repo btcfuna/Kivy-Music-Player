@@ -13,7 +13,7 @@ package.domain = org.black
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas
+source.include_exts = py,png,jpg,kv,atlas,ttf
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -36,11 +36,11 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.0.0,kivymd,pillow,requests,mutagen,pydes,urllib3,chardet,idna,android,ffpyplayer,certifi
+requirements = python3,kivy==2.0.0,kivymd,requests,mutagen,pydes,urllib3,chardet,idna,android,pillow
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
-# requirements.source.kivy = ../../kivy
+#requirements.source.kivymd = ../KivyMD
 
 # (str) Presplash of the application
 presplash.filename = %(source.dir)s/splash.jpg
@@ -51,7 +51,7 @@ icon.filename = %(source.dir)s/icon-white.png
 orientation = portrait
 
 # (list) List of service to declare
-#services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY
+services = Myservice:service.py
 
 #
 # OSX Specific
@@ -64,7 +64,7 @@ orientation = portrait
 osx.python_version = 3
 
 # Kivy version to use
-osx.kivy_version = 2.0.0rc4
+osx.kivy_version = 2.0.0
 
 #
 # Android specific
@@ -87,7 +87,7 @@ fullscreen = 0
 #android.presplash_lottie = "path/to/lottie/file.json"
 
 # (list) Permissions
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
+android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,FOREGROUND_SERVICE
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host

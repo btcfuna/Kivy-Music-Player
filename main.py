@@ -120,14 +120,14 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.user_data_path = 'data.json'#os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
         self.user_data = JsonStore(self.user_data_path)
         Window.bind(on_keyboard=self.events)
         if self.user_data.exists('download_path'):
             self.path = self.user_data.get('download_path')['path']
         else:
-            self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
+            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = os.path.join(self.user_data_dir, 'cache')
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -466,7 +466,7 @@ class MyApp(MDApp):
         if self.sound:
             #print("Sound found at %s" % self.sound.source)
             #print("Sound is %.3f seconds" % self.sound.length)
-            if self.play_status == 'pause':
+            if self.play_status == 'pause' or self.play_status == 'stop':
                 self.play_btn.icon = 'pause'
                 self.play()
                 lnth = self.sound.getDuration()
@@ -481,7 +481,8 @@ class MyApp(MDApp):
     
     def online_play_bar(self, length):
         while True:
-            self.play_progress.value = 100*(self.sound.getCurrentPosition())/length
+            if length != 0:
+                self.play_progress.value = 100*(self.sound.getCurrentPosition())/length
             #print(self.progress.value)
             time.sleep(1)
             self.play_stamp.text = self.convert_sec(self.sound.getCurrentPosition())
@@ -551,10 +552,8 @@ class MyApp(MDApp):
 
             
     def play_song_offline(self):
-        if self.sound:
-            #print("Sound found at %s" % self.sound.source)
-            #print("Sound is %.3f seconds" % self.sound.length)
-            if self.play_status == 'pause':
+        if True:
+            if self.play_status == 'pause' or self.play_status == 'stop':
                 self.play_btn.icon = 'pause'
                 self.play()
                 lnth = self.sound.getDuration()
@@ -578,10 +577,16 @@ class MyApp(MDApp):
             print('Error: Length is {}'.format(lnth))
 
     def prepare(self, link):
-        self.sound = MediaPlayer()
-        self.sound.setDataSource(link)
-        self.sound.prepare()
-        self.sound.setLooping(False)
+        print('preparing')
+        try:
+            self.sound = MediaPlayer()
+            self.sound.setDataSource(link)
+            self.sound.prepare()
+            self.sound.setLooping(False)
+        except:
+            time.sleep(0.25)
+            self.prepare(link)
+        print('prepared')
     def play(self):
         self.sound.start()
         self.play_status = 'play'
@@ -593,9 +598,9 @@ class MyApp(MDApp):
         self.sound.release()
         self.play_status = 'stop'
     def forward(self):
-        self.sound.seekTo(self.nowPlaying.getCurrentPosition() + 10)
+        self.sound.seekTo(self.sound.getCurrentPosition() + 5000)
     def rewind(self):
-        self.sound.seekTo(self.nowPlaying.getCurrentPosition() - 10)
+        self.sound.seekTo(self.sound.getCurrentPosition() - 5000)
     
     def callback_for_about(self, *args):
         toast('Opening ' + args[0])
