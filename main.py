@@ -255,7 +255,7 @@ class MyApp(MDApp):
         self.down_path_list = []
         for root, dirs, files in os.walk(os.getenv('EXTERNAL_STORAGE')):
             for filename in files:
-                if os.path.splitext(filename)[1] in [".mp3", ".m4a", ".mp4", ".ogg", ".wav"]:
+                if os.path.splitext(filename)[1] in [".mp3", ".m4a", ".ogg", ".wav"]:
                     self.down_path_list.append((os.path.join(root, filename), filename))
         for i in range(len(self.down_path_list)):
             lst = OneLineAvatarListItem(text=self.down_path_list[i][1], on_press=lambda x, y=i: self.play_song(y))
@@ -482,13 +482,15 @@ class MyApp(MDApp):
             time.sleep(0.5)
             self.play_song_online
     
-    def online_play_bar(self, length):
+    def online_play_bar(self, length, *args):
         while True:
             if length != 0:
                 self.play_progress.value = 100*(self.sound.getCurrentPosition())/length
             #print(self.progress.value)
             time.sleep(1)
             self.play_stamp.text = self.convert_sec(self.sound.getCurrentPosition())
+            if self.soung.getCurrentPosition() == length and args:
+                self.play_song(args[0]+1)
             if self.play_status == 'stop':
                 break
 
@@ -544,23 +546,25 @@ class MyApp(MDApp):
         self.root.ids.PlayScreen.add_widget(self.play_progress)
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .15, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.rewind()))
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .85, "center_y": .15}, user_font_size="40sp", on_release=lambda x: self.forward()))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="skip-next", pos_hint={"center_x": .65, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i+1)))
-        self.root.ids.PlayScreen.add_widget(MDIconButton(icon="skip-previous", pos_hint={"center_x": .35, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i-1)))
+        self.next_button = MDIconButton(icon="skip-next", pos_hint={"center_x": .65, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i+1))
+        self.root.ids.PlayScreen.add_widget(self.next_button)
+        self.previous_button = (MDIconButton(icon="skip-previous", pos_hint={"center_x": .35, "center_y": .15}, user_font_size="55sp", on_release=lambda x: self.play_song(i-1)))
+        self.root.ids.PlayScreen.add_widget(self.previous_button)
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_offline())
         self.root.ids.PlayScreen.add_widget(self.play_btn)
         self.root.ids.PlayScreen.add_widget(MDLabel(text=self.convert_sec(self.sound.getDuration()), halign='right', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
         self.play_stamp = (MDLabel(text=self.convert_sec(self.sound.getCurrentPosition()), halign='left', theme_text_color='Secondary', padding_x='20dp', pos_hint={"top":0.725}))
         self.root.ids.PlayScreen.add_widget(self.play_stamp)
-        self.play_song_offline()
+        self.play_song_offline(i)
 
             
-    def play_song_offline(self):
+    def play_song_offline(self, i):
         if True:
             if self.play_status == 'pause' or self.play_status == 'stop':
                 self.play_btn.icon = 'pause'
                 self.play()
                 lnth = self.sound.getDuration()
-                t2 = threading.Thread(target=self.online_play_bar, args=(lnth,))
+                t2 = threading.Thread(target=self.online_play_bar, args=(lnth,i))
                 t2.start()
             elif self.play_status == 'play':
                 self.play_btn.icon = 'play'
