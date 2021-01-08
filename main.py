@@ -49,8 +49,6 @@ if platform == 'android':
     MediaPlayer = autoclass('android.media.MediaPlayer')
     AudioManager = autoclass('android.media.AudioManager')
 
-win_size = min(Window.size)
-
 search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query="
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
 playlist_details_base_url = "https://www.jiosaavn.com/api.php?__call=webapi.get&token={}&type=playlist&p=1&n=20&includeMetaTags=0&ctx=web6dot0&api_version=4&_format=json&_marker=0"
@@ -69,6 +67,21 @@ playlist_ids = {
   "Haryanvi - Top JioTunes":"xgyTegenCljc1EngHtQQ2g__",
   }
 
+playlist_images = {
+    "8MT-LQlP35c_" : "http://c.saavncdn.com/editorial/wt15-49_20210101173527.jpg?bch=1609524330",
+    "znKA,YavndBuOxiEGmm6lQ__" : "https://pli.saavncdn.com/44/90/101334490.jpg?bch=1486377541",
+    "8MT-LQlP35c_" : "http://c.saavncdn.com/editorial/wt15-49_20210101173527.jpg?bch=1609524330",
+    "AZNZNH1EwNjfemJ68FuXsA__" : "https://c.saavncdn.com/editorial/TopJioTunesHindi_20200721161337.jpg?bch=1610064389",
+    "LdbVc1Z5i9E_" : "http://c.saavncdn.com/editorial/wt15-7386899_20210101134203.jpg?bch=1609510327",
+    "xXiMISqMjsrfemJ68FuXsA__" : "https://c.saavncdn.com/editorial/TopJioTunesEnglish_20181220070458.jpg",
+    "W6DUe-fP3X8_" : "https://c.saavncdn.com/editorial/wt15-2676373_20201225140344.jpg?bch=1608935628",
+    "mzDerWPsSwiO0eMLZZxqsA__" : "https://c.saavncdn.com/editorial/TopJioTunesPunjabi_20181220084041.jpg?bch=1610064899",
+    "T,w3Z-u7t6A_" : "https://c.saavncdn.com/editorial/LatestPunjabiHits_20201128085206.jpg?bch=1606555342",
+    "zvYYPLOvojJFo9wdEAzFBA__" : "https://c.saavncdn.com/editorial/VYRLTop20_20200929074344.jpg?bch=1605790299",
+    "ar5lExlDmbwwkg5tVhI3fw__" : "https://c.saavncdn.com/editorial/wt15-157145953_20210101135104.jpg?bch=1609539668",
+    "xgyTegenCljc1EngHtQQ2g__" : "https://c.saavncdn.com/editorial/TopJioTunesHaryanvi_20181220085019.jpg?bch=1610064088",
+}
+
 class Tab(FloatLayout, MDTabsBase):
     pass
 
@@ -78,6 +91,7 @@ class MyApp(MDApp):
     status = True
     play_status = 'stop'
     last_screen = []
+    win_size = min(Window.size)
 
 #    def on_start(self):
 #        self.root.ids.tabs.add_widget(Tab(text='Local'))
@@ -120,14 +134,14 @@ class MyApp(MDApp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.user_data_path = os.path.join(self.user_data_dir, 'data.json')
+        self.user_data_path = 'data.json'#os.path.join(self.user_data_dir, 'data.json')
         self.user_data = JsonStore(self.user_data_path)
         Window.bind(on_keyboard=self.events)
         if self.user_data.exists('download_path'):
             self.path = self.user_data.get('download_path')['path']
         else:
-            self.path = os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
-        self.data_path = os.path.join(self.user_data_dir, 'cache')
+            self.path = 'songs'#os.path.join(os.getenv('EXTERNAL_STORAGE'), 'Songs')
+        self.data_path = 'cache'#os.path.join(self.user_data_dir, 'cache')
         #self.user_data.put('accent', color='Blue')
         self.manager_open = False
         self.file_manager = MDFileManager(
@@ -174,8 +188,6 @@ class MyApp(MDApp):
         self.top_list = self.root.ids.top_list
 #        self.top_global_list = self.root.ids.top_global_list
         if self.top_list.children == []:
-            #executor = ThreadPoolExecutor(max_workers=10)
-            #executor.submit(self.thread_top)
             Clock.schedule_once(self.thread_top)
             self.dia = MDDialog(text="Loading spotify top 200 chart", size_hint=(0.7,1))
             self.dia.open()
@@ -185,18 +197,11 @@ class MyApp(MDApp):
         self.add_top_thread.start()
     
     def add_trend(self):
-        #executor = ThreadPoolExecutor(max_workers=5)
-        #t1 = threading.Thread(target=self.get_playlist, args=("zvYYPLOvojJFo9wdEAzFBA__",))
-        #t1.start()
-        Clock.schedule_once(self.trend_thread)
+        Clock.schedule_once(self.add_trend2)
         self.dia = MDDialog(text="Loading trending songs", size_hint=(0.7,1))
         self.dia.open()
     
-    def trend_thread(self, *args):
-        self.add_trend_thread=threading.Thread(target=self.add_trend2)
-        self.add_trend_thread.start()
-    
-    def add_trend2(self):
+    def add_trend2(self, *args):
         if self.root.ids.trend_grid.children == []:
             for key, values in playlist_ids.items():
                 self.get_playlist(key, values)
@@ -215,7 +220,7 @@ class MyApp(MDApp):
                     pos = int(row[0])
                     song_name = row[1]
                     art_name = row[2]
-                    lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.show_data(y))
+                    lst = TwoLineAvatarListItem(text="{}. {}".format(pos, song_name), secondary_text=art_name, on_press=lambda x, y=song_name: self.select_spotify(y))
                     lst.add_widget(IconLeftWidget(icon='music-note-outline'))
                     self.top_list.add_widget(lst)
                 except:
@@ -224,6 +229,18 @@ class MyApp(MDApp):
             self.dia.dismiss()
         except:
             pass
+
+    def select_spotify(self, song_name):
+        self.dia = MDDialog(text="Loading..", size_hint=(0.7,1))
+        self.dia.open()
+        spoti = threading.Thread(target=self.spoti_thread, args=(song_name,))
+        spoti.start()
+    
+    def spoti_thread(self, song_name):
+        response = requests.get(search_base_url+song_name)
+        result = response.content.decode()
+        self.search_data = json.loads(result.replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"))['songs']['data']
+        self.song_details(0)
 
     def push_notify(self, head):
         notification.notify(head, "Download complete")
@@ -292,37 +309,15 @@ class MyApp(MDApp):
         print('finished fetching details')
     
     def get_playlist(self, title, listId):
-        try:
-            response = requests.get(playlist_details_base_url.format(listId))
-            if response.status_code == 200:
-                songs_json = response.text.encode().decode('utf-8')
-                songs_json = json.loads(songs_json)
-                #box = FloatLayout(size_hint=(1,1))
-                #srlv = ScrollView()
-                #lst_vw = MDList()
-                image = AsyncImage(source=songs_json['image'], size_hint=(1,1), pos_hint={'top':0.9}, allow_stretch=True)
-                card = MDCard(orientation='vertical', border_radius= 15, radius= [0,0,15,15], pos_hint={"center_x":0.5, "center_y":0.5}, size_hint=(None, None), size=(win_size*0.3, win_size*0.3))
-                card.add_widget(image)
-                self.root.ids.trend_grid.add_widget(MDTextButton(text=title, pos_hint= {'center_x':0.5}, on_press=lambda x: self.show_top(title, listId)))
-                self.root.ids.trend_grid.add_widget(card)
-                #self.root.ids.trend_grid.add_widget(box)
-                #for i in range(int(len(songs_json['list']))):
-                    #print(items)
-                #    items['id']
-                #    lt = TwoLineAvatarListItem(text=songs_json['list'][i]['title'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), secondary_text=songs_json['list'][i]['subtitle'].replace("&quot;","'").replace("&amp;", "&").replace("&#039;", "'"), on_press=lambda x,y=i: self.song_details(y))
-                    #lst_vw.add_widget(lt)
-                #srlv.add_widget(lst_vw)
-                #print(srlv)
-                #box.add_widget(srlv)
-                #self.root.ids.trend_grid.add_widget(box)
-                #print(self.root.ids.trend_grid.children)
-                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
-                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
-                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
-                self.root.ids.trend_grid.add_widget(MDLabel(text=''))
-                    
-        except Exception as e:
-            print(e)
+        image = AsyncImage(source=playlist_images[listId], size_hint=(1,1), pos_hint={'top':0.9}, allow_stretch=True)
+        card = MDCard(orientation='vertical', border_radius= 15, radius= [0,0,15,15], pos_hint={"center_x":0.5, "center_y":0.5}, size_hint=(None, None), size=(self.win_size*0.3, self.win_size*0.3))
+        card.add_widget(image)
+        self.root.ids.trend_grid.add_widget(MDTextButton(text=title, pos_hint= {'center_x':0.5}, on_press=lambda x: self.show_top(title, listId)))
+        self.root.ids.trend_grid.add_widget(card)
+        self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+        self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+        self.root.ids.trend_grid.add_widget(MDLabel(text=''))
+        self.root.ids.trend_grid.add_widget(MDLabel(text=''))
         
     def show_top(self, ttl, Id):
         self.dia = MDDialog(text="Loading {}".format(ttl), size_hint=(0.7,1))
@@ -377,7 +372,7 @@ class MyApp(MDApp):
         self.fetch_thread.start()
         self.details_screen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.back_screen()))
         song_image = AsyncImage(source=self.image_url, pos_hint={"center_x":0.5, "center_y":0.5}, allow_stretch=True)
-        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(win_size*0.9, win_size*0.9))
+        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(self.win_size*0.9, self.win_size*0.9))
         card.add_widget(song_image)
         self.details_screen.add_widget(card)
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.84}))
@@ -398,7 +393,11 @@ class MyApp(MDApp):
         self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_online())#self.tap_target_start())
         self.details_screen.add_widget(self.play_btn)
         self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', user_font_size="30sp", theme_text_color= 'Secondary', pos_hint={'center_x':0.9, "center_y":0.15}, on_press=lambda x: self.download_bar()))
-        
+        try:
+            self.dia.dismiss()
+        except:
+            pass
+
     def add_fav(self):
         if self.heart_icon.icon == 'heart-outline':
             self.heart_icon.icon = 'heart'
@@ -532,7 +531,7 @@ class MyApp(MDApp):
         song_image.texture= img
         self.root.ids.PlayScreen.clear_widgets()
         self.root.ids.PlayScreen.add_widget(MDIconButton(icon='chevron-left', pos_hint={"center_x":0.05, "center_y":0.95}, on_press=lambda x: self.back_screen()))
-        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(win_size*0.9, win_size*0.9))
+        card = MDCard(orientation='vertical', pos_hint={"center_x":0.5, "center_y":0.65}, size_hint=(None, None), size=(self.win_size*0.9, self.win_size*0.9))
         card.add_widget(song_image)
         self.root.ids.PlayScreen.add_widget(card)
         self.root.ids.PlayScreen.add_widget(MDLabel(text=self.play_song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.84}))
@@ -583,7 +582,8 @@ class MyApp(MDApp):
             self.sound.setDataSource(link)
             self.sound.prepare()
             self.sound.setLooping(False)
-        except:
+        except Exception as e:
+            print(e)
             time.sleep(0.25)
             self.prepare(link)
         print('prepared')
