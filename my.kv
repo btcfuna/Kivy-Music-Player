@@ -134,7 +134,7 @@ NavigationLayout:
             BoxLayout:
                 orientation: 'vertical'
                 MDToolbar:
-                    title: 'Downloads'
+                    title: 'My Music'
                     elevation: 10
                     left_action_items: [['chevron-left', lambda x: app.back_screen()]]
 
@@ -290,7 +290,7 @@ NavigationLayout:
                         
                         
                     OneLineIconListItem:
-                        text: 'Downloads'
+                        text: 'My Music'
                         theme_text_color: "Custom"
                         text_color: app.theme_cls.primary_color if screen_manager.current == 'DownloadsScreen' else app.theme_cls.text_color
                         on_release:
