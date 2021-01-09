@@ -13,6 +13,7 @@ from kivy.core.window import Window
 from kivy.utils import platform
 from kivymd.uix.bottomsheet import MDGridBottomSheet
 from kivymd.uix.taptargetview import MDTapTargetView
+from kivymd.uix.spinner import MDSpinner
 from kivy.storage.jsonstore import JsonStore
 from kivy.loader import Loader
 from kivy.lang import Builder
@@ -53,7 +54,6 @@ search_base_url = "https://www.jiosaavn.com/api.php?__call=autocomplete.get&_for
 song_details_base_url = "https://www.jiosaavn.com/api.php?__call=song.getDetails&cc=in&_marker=0%3F_marker%3D0&_format=json&pids="
 playlist_details_base_url = "https://www.jiosaavn.com/api.php?__call=webapi.get&token={}&type=playlist&p=1&n=20&includeMetaTags=0&ctx=web6dot0&api_version=4&_format=json&_marker=0"
 playlist_ids = {
-  "Weekly Top Songs" : "8MT-LQlP35c_",
   "Weekly Top JioTunes" : "znKA,YavndBuOxiEGmm6lQ__",
   "Hindi - Weekly Top Songs" : "8MT-LQlP35c_",
   "Hindi - Top JioTunes":"AZNZNH1EwNjfemJ68FuXsA__",
@@ -70,7 +70,6 @@ playlist_ids = {
 playlist_images = {
     "8MT-LQlP35c_" : "http://c.saavncdn.com/editorial/wt15-49_20210101173527.jpg?bch=1609524330",
     "znKA,YavndBuOxiEGmm6lQ__" : "https://pli.saavncdn.com/44/90/101334490.jpg?bch=1486377541",
-    "8MT-LQlP35c_" : "http://c.saavncdn.com/editorial/wt15-49_20210101173527.jpg?bch=1609524330",
     "AZNZNH1EwNjfemJ68FuXsA__" : "https://c.saavncdn.com/editorial/TopJioTunesHindi_20200721161337.jpg?bch=1610064389",
     "LdbVc1Z5i9E_" : "http://c.saavncdn.com/editorial/wt15-7386899_20210101134203.jpg?bch=1609510327",
     "xXiMISqMjsrfemJ68FuXsA__" : "https://c.saavncdn.com/editorial/TopJioTunesEnglish_20181220070458.jpg",
@@ -125,6 +124,21 @@ class MyApp(MDApp):
         # else:
         #     sync_thread = threading.Thread(target=self.get_chart)
         #     sync_thread.start()
+
+    def notify(self, title='', message='', app_name='', app_icon='', timeout=10, ticker='', toast=False):
+        AndroidString = autoclass('java.lang.String')
+        PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        NotificationBuilder = autoclass('android.app.Notification$Builder')
+        Context = autoclass('android.content.Context')
+        Drawable = autoclass('org.test.notify.R$drawable')
+        app_icon = Drawable.icon
+        notification_builder = NotificationBuilder(PythonActivity.mActivity)
+        notification_builder.setContentTitle(AndroidString(title.encode('utf-8')))
+        notification_builder.setContentText(AndroidString(message.encode('utf-8')))
+        notification_builder.setSmallIcon(app_icon)
+        notification_builder.setAutoCancel(True)
+        notification_service = notification_service = PythonActivity.mActivity.getSystemService(Context.NOTIFICATION_SERVICE)
+        notification_service.notify(0,notification_builder.build())
 
     def tap_target_start(self):
         if self.tap_target_view.state == "close":
@@ -381,6 +395,7 @@ class MyApp(MDApp):
         self.details_screen.add_widget(card)
         self.details_screen.add_widget(MDLabel(text=self.song_name, halign='center', theme_text_color='Custom', text_color=self.theme_cls.primary_color, font_style='H4', bold=True, pos_hint={"top":0.84}))
         self.details_screen.add_widget(MDLabel(text=self.artist_name, halign='center', theme_text_color='Secondary', font_style='H6', pos_hint={"top":0.8}))
+        self.spinner = MDSpinner(size_hint=(None, None), size=("50","50"), pos_hint={'center_x':0.5, "center_y":0.15}, active=True)
         #self.details_screen.add_widget(MDLabel(text=self.album, halign='center', theme_text_color='Hint', font_style='H6', pos_hint={"top":0.9}))
         self.heart_icon = MDIconButton(icon='heart-outline', user_font_size="30sp", theme_text_color= 'Secondary', pos_hint={"center_x":0.1, "center_y":0.15}, on_press=lambda x: self.add_fav())
         self.details_screen.add_widget(self.heart_icon)
@@ -394,7 +409,7 @@ class MyApp(MDApp):
         )
         self.details_screen.add_widget(MDIconButton(icon="chevron-double-left", pos_hint={"center_x": .3, "center_y": .15}, user_font_size="50sp", on_release=lambda x: self.rewind()))
         self.details_screen.add_widget(MDIconButton(icon="chevron-double-right", pos_hint={"center_x": .7, "center_y": .15}, user_font_size="50sp", on_release=lambda x: self.forward()))
-        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_online())#self.tap_target_start())
+        self.play_btn = MDFloatingActionButton(icon='play', pos_hint={'center_x':0.5, "center_y":0.15}, user_font_size="50sp", md_bg_color=(1,1,1,1), elevation_normal=10, on_press=lambda x: self.play_song_online())
         self.details_screen.add_widget(self.play_btn)
         self.details_screen.add_widget(MDIconButton(icon='arrow-collapse-down', user_font_size="30sp", theme_text_color= 'Secondary', pos_hint={'center_x':0.9, "center_y":0.15}, on_press=lambda x: self.download_bar()))
         try:
